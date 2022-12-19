@@ -55,7 +55,8 @@
               }
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -122,7 +123,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Начало начал.md",
+                "file": "вычисление локальных матриц.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -139,7 +140,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Начало начал.md",
+                "file": "вычисление локальных матриц.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -162,7 +163,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Начало начал.md"
+                "file": "вычисление локальных матриц.md"
               }
             }
           }
@@ -173,14 +174,14 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "80213b34ce1199c9",
+  "active": "02c54893b0d38f3a",
   "lastOpenFiles": [
+    "Начало начал.md",
     "Исходное по Галеркину.md",
     "Базисные функции.md",
     "вычисление локальных матриц.md",
     "Основные формулы с кирпича.md",
     "Полезные пункты кирпича.md",
-    "Начало начал.md",
     "конечноэлементная СЛАУ.md",
     "Решаемое уравнение.md",
     "Справочный материал.md",
