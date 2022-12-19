@@ -12,9 +12,9 @@ $-div(\lambda grad(u)) + \gamma u = f$
 Граница интегрирования: $S = S_1 \lor S_2 \lor S_3$
 
 Краевые условия:
-- Первые: $u|_{s_1} = u_g$
+- Первые: $u| _ {s_1} = u_g$
 - Вторые: $\lambda \frac{\partial u}{\partial n} = \theta$
-- Третьи: $\lambda \frac{\partial u}{\partial n} |_{s_3} + \beta(u|_{s_3} - u_{\beta}) = 0$
+- Третьи: $\lambda\frac{\partial u}{\partial n} | _ {s_3} + \beta ( u | _ {s_3} - u_{\beta}) = 0$
 
 $\lambda$ - коэффициент диффузии,
 
