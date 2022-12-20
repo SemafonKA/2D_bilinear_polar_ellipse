@@ -20,6 +20,18 @@
             }
           },
           {
+            "id": "5f4edf85754d4d44",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Исходное по Галеркину.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
             "id": "0df5c61e9e12c5d6",
             "type": "leaf",
             "state": {
@@ -135,7 +147,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Решаемое уравнение.md",
+                "file": "Исходное по Галеркину.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -152,7 +164,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Решаемое уравнение.md",
+                "file": "Исходное по Галеркину.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -175,7 +187,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Решаемое уравнение.md"
+                "file": "Исходное по Галеркину.md"
               }
             }
           }
@@ -186,7 +198,7 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "0df5c61e9e12c5d6",
+  "active": "5f4edf85754d4d44",
   "lastOpenFiles": [
     "Начало начал.md",
     "Решаемое уравнение.md",

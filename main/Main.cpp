@@ -121,6 +121,50 @@ void readDataFromFiles() {
    s3_edgesFile.close();
 }
 
+void generatePortrait() {
+   global_mat.di.resize(nodes.size());
+   global_mat.ig.resize(nodes.size() + 1);
+
+   for (auto& rect : rectangles)
+   {
+      int elems[4] = { rect.a, rect.b, rect.c, rect.d };
+      for (int i = 0; i < 4; i++)
+      {
+         for (int k = 0; k < 4; k++)
+         {
+            // Если элемент на диагонали или в верхнем треугольнике, то скипаем
+            if (i == k || elems[k] > elems[i])
+            {
+               continue;
+            }
+            
+            bool isExist = false;
+            // Пробегаем по всей строке для проверки, существует ли такой элемент
+            for (int it = global_mat.ig[elems[i]]; it < global_mat.ig[elems[i] + 1]; it++)
+            {
+               if (global_mat.jg[it] == elems[k]) isExist = true;
+            }
+            if (!isExist)
+            {
+               // Ищем, куда вставить элемент портрета
+               int it = global_mat.ig[elems[i]];
+               while (it < global_mat.ig[elems[i] + 1] && global_mat.jg[it] < elems[k]) it++;
+               // Для вставки нужно взять итератор массива от начала, так что...
+               global_mat.jg.insert(global_mat.jg.begin() + it, elems[k]);
+               // Добавляем всем элементам ig с позиции elems[i]+1 один элемент
+               for (int j = elems[i] + 1; j < global_mat.ig.size(); j++) 
+                  global_mat.ig[j]++;
+            }
+         }
+      }
+   }
+   global_mat.ggl.resize(global_mat.jg.size());
+   global_mat.ggu.resize(global_mat.jg.size());
+}
+
 void main() {
    readDataFromFiles();
+   generatePortrait();
+
+   return;
 }

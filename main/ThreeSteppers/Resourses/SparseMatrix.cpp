@@ -1,4 +1,4 @@
-﻿#include "SparseMatrix.h"
+﻿#include "../Headers/SparseMatrix.h"
 
 using namespace std;
 

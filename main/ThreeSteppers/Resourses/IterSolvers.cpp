@@ -1,4 +1,4 @@
-﻿#include "IterSolvers.h"
+﻿#include "../Headers/IterSolvers.h"
 using namespace std;
 
 namespace Vec {
