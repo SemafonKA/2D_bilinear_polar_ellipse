@@ -12,9 +12,9 @@ $-div(\lambda grad(u)) + \gamma u = f$
 Граница интегрирования: $S = S_1 \lor S_2 \lor S_3$
 
 Краевые условия:
-- Первые: $u|_{s_1} = u_g$
+- Первые: $u| _ {s_1} = u_g$
 - Вторые: $\lambda \frac{\partial u}{\partial n} = \theta$
-- Третьи: $\lambda \frac{\partial u}{\partial n} |_{s_3} + \beta(u|_{s_3} - u_{\beta}) = 0$
+- Третьи: $\lambda\frac{\partial u}{\partial n} | _ {s_3} + \beta ( u | _ {s_3} - u_{\beta}) = 0$
 
 $\lambda$ - коэффициент диффузии,
 
@@ -24,11 +24,7 @@ $\beta$ - коэффициент теплообмена.
 $$grad\space v = (\frac{\partial v}{\partial r}, \frac{1}{r} \frac{\partial v}{\partial \phi})$$
 $$div\space \overrightarrow{Q} = \frac{1}{r} \frac{\partial (rQ_1)}{\partial r} + \frac{1}{r} \frac{\partial Q_2}{\partial \phi}$$
 А само уравнение в таком случае будет выглядеть следующим образом:
-$$
--\frac{1}{r}\frac{\partial}{\partial r}(r\lambda \frac{\partial u}{\partial r})
-- \frac{1}{r^2}\frac{\partial}{\partial \phi}(\lambda \frac{\partial u}{\partial \phi})
-+ \gamma u = f
-$$
+$$-\frac{1}{r}\frac{\partial}{\partial r}(r\lambda \frac{\partial u}{\partial r}) - \frac{1}{r^2}\frac{\partial}{\partial \phi}(\lambda \frac{\partial u}{\partial \phi}) + \gamma u = f$$
 
 Для вычислений СЛАУ использовался трёхшаговый метод ЛОС с неполным LU-sq предобуславливанием (неполным разложением Холесского) из лабораторной работы №3.
 
