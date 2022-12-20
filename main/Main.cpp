@@ -9,34 +9,6 @@
 
 using namespace std;
 
-#pragma region TYPEDEFINES
-using Matrix = vector<vector<double>>;
-
-struct Rectangle {
-   int a = 0;
-   int b = 0;
-   int c = 0;
-   int d = 0;
-   int regionNum = 0;
-};
-
-struct Node {
-   double r = 0.0;
-   double phi = 0.0;
-};
-
-struct S1_node {
-   int node = 0;
-   int funcNum = 0;
-};
-
-struct S23_edge {
-   int node1 = 0;
-   int node2 = 0;
-   int funcNum = 0;
-};
-#pragma endregion TYPEDEFINES
-
 #pragma region GLOBAL_OBJECTS
 // Глобальная разреженная матрица системы
 SparseMatrix global_mat;
@@ -61,7 +33,7 @@ vector<S23_edge> s3_edges;
 void readDataFromFiles() {
    // Считывание данных для структуры узлов nodes
    auto nodesFile = ifstream(GlobalPaths::nodesPath);
-   if (!nodesFile.is_open()) 
+   if (!nodesFile.is_open())
       throw runtime_error("Не удалось открыть файл " + GlobalPaths::nodesPath);
    int size;
    nodesFile >> size;
@@ -74,7 +46,7 @@ void readDataFromFiles() {
 
    // Считывание данных для структуры прямоугольников rectangles
    auto rectanglesFile = ifstream(GlobalPaths::rectanglesPath);
-   if (!rectanglesFile.is_open()) 
+   if (!rectanglesFile.is_open())
       throw runtime_error("Не удалось открыть файл " + GlobalPaths::rectanglesPath);
    rectanglesFile >> size;
    rectangles.resize(size);
@@ -137,7 +109,7 @@ void generatePortrait() {
             {
                continue;
             }
-            
+
             bool isExist = false;
             // Пробегаем по всей строке для проверки, существует ли такой элемент
             for (int it = global_mat.ig[elems[i]]; it < global_mat.ig[elems[i] + 1]; it++)
@@ -152,7 +124,7 @@ void generatePortrait() {
                // Для вставки нужно взять итератор массива от начала, так что...
                global_mat.jg.insert(global_mat.jg.begin() + it, elems[k]);
                // Добавляем всем элементам ig с позиции elems[i]+1 один элемент
-               for (int j = elems[i] + 1; j < global_mat.ig.size(); j++) 
+               for (int j = elems[i] + 1; j < global_mat.ig.size(); j++)
                   global_mat.ig[j]++;
             }
          }
@@ -162,9 +134,151 @@ void generatePortrait() {
    global_mat.ggu.resize(global_mat.jg.size());
 }
 
+void addLocalG(const Rectangle& rect) {
+   double rp = nodes[rect.a].r;
+   double hr = nodes[rect.b].r - nodes[rect.a].r;
+   double phi_s = nodes[rect.a].phi;
+   double h_phi = nodes[rect.c].phi - nodes[rect.a].phi;
+   double lambda = (lambda_value(rect.regionNum, nodes[rect.a]) +
+      lambda_value(rect.regionNum, nodes[rect.b]) +
+      lambda_value(rect.regionNum, nodes[rect.c]) +
+      lambda_value(rect.regionNum, nodes[rect.d])) / 4;
+
+   double integrals[9];
+   integrals[0] = rp / hr + 0.5;
+   integrals[1] = -integrals[0];
+   integrals[2] = (((rp * rp) / (hr * hr)) + (2 * rp / hr) + 1) * std::log((rp + hr) / rp) - (rp / hr) - 1.5;
+   integrals[3] = -(rp / hr) * std::log((rp + hr) / rp) + 1;
+   integrals[4] = -(rp / hr + (rp * rp) / (hr * hr)) * std::log((rp + hr) / rp) + (rp / hr) + 0.5;
+   integrals[5] = h_phi / 3;
+   integrals[6] = h_phi / 6;
+   integrals[7] = 1 / h_phi;
+   integrals[8] = -integrals[7];
+
+
+   local_mat[0][0] = lambda * (integrals[0] * integrals[5] + integrals[2] * integrals[7]);
+   local_mat[0][1] = lambda * (integrals[1] * integrals[5] + integrals[4] * integrals[7]);
+   local_mat[0][2] = lambda * (integrals[0] * integrals[6] + integrals[2] * integrals[8]);
+   local_mat[0][3] = lambda * (integrals[1] * integrals[6] + integrals[4] * integrals[8]);
+   local_mat[1][0] = local_mat[0][1];
+   local_mat[1][1] = lambda * (integrals[0] * integrals[5] + integrals[3] * integrals[7]);
+   local_mat[1][2] = local_mat[0][3];
+   local_mat[1][3] = lambda * (integrals[0] * integrals[6] + integrals[3] * integrals[8]);
+   local_mat[2][0] = local_mat[0][2];
+   local_mat[2][1] = local_mat[1][2];
+   local_mat[2][2] = lambda * (integrals[0] * integrals[5] + integrals[2] * integrals[7]);
+   local_mat[2][3] = lambda * (integrals[1] * integrals[5] + integrals[4] * integrals[7]);
+   local_mat[3][0] = local_mat[0][3];
+   local_mat[3][1] = local_mat[1][3];
+   local_mat[3][2] = local_mat[2][3];
+   local_mat[3][3] = lambda * (integrals[0] * integrals[5] + integrals[3] * integrals[7]);
+}
+
+void addLocalM(const Rectangle& rect) {
+   double rp = nodes[rect.a].r;
+   double hr = nodes[rect.b].r - nodes[rect.a].r;
+   double phi_s = nodes[rect.a].phi;
+   double h_phi = nodes[rect.c].phi - nodes[rect.a].phi;
+   double gamma[4] = {
+      gamma_value(rect.regionNum, nodes[rect.a]),
+      gamma_value(rect.regionNum, nodes[rect.b]),
+      gamma_value(rect.regionNum, nodes[rect.c]),
+      gamma_value(rect.regionNum, nodes[rect.d])
+   };
+   double tmp[4][4];
+
+   tmp[0][0] = hr * h_phi * (gamma[0] * (rp / 4 + hr / 20) / 4
+      + gamma[1] * (rp / 12 + hr / 30) / 4
+      + gamma[2] * (rp / 4 + hr / 20) / 12
+      + gamma[3] * (rp / 12 + hr / 30)  / 12
+      );
+   tmp[0][1] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 4
+      + gamma[1] * (rp / 12 + hr / 20) / 4
+      + gamma[2] * (rp / 12 + hr / 30) / 12
+      + gamma[3] * (rp / 12 + hr / 20)  / 12
+      );
+   tmp[0][2] = hr * h_phi * (gamma[0] * (rp / 4 + hr / 20) / 12
+      + gamma[1] * (rp / 12 + hr / 30) / 12
+      + gamma[2] * (rp / 4 + hr / 20) / 12
+      + gamma[3] * (rp / 12 + hr / 30)  / 12
+      );
+   tmp[0][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 12
+      + gamma[1] * (rp / 12 + hr / 20) / 12
+      + gamma[2] * (rp / 12 + hr / 30) / 12
+      + gamma[3] * (rp / 12 + hr / 20)  / 12
+      );
+   tmp[1][0] = tmp[0][1];
+   tmp[1][1] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 20) / 4
+      + gamma[1] * (rp / 4 + hr / 5) / 4
+      + gamma[2] * (rp / 12 + hr / 20) / 12
+      + gamma[3] * (rp / 4 + hr / 5) / 12
+      );
+   tmp[1][2] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 12
+      + gamma[1] * (rp / 12 + hr / 20) / 12
+      + gamma[2] * (rp / 12 + hr / 30) / 12
+      + gamma[3] * (rp / 12 + hr / 20) / 12
+      );
+   tmp[1][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 20) / 12
+      + gamma[1] * (rp / 4 + hr / 5) / 12
+      + gamma[2] * (rp / 12 + hr / 20) / 12
+      + gamma[3] * (rp / 4 + hr / 5) / 12
+      );
+   tmp[2][0] = tmp[0][2];
+   tmp[2][1] = tmp[1][2];
+   tmp[2][2] = hr * h_phi * (gamma[0] * (rp / 4 + hr / 20) / 12
+      + gamma[1] * (rp / 12 + hr / 30) / 12
+      + gamma[2] * (rp / 4 + hr / 20) / 4
+      + gamma[3] * (rp / 12 + hr / 30) / 4
+      );
+   tmp[2][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 12
+      + gamma[1] * (rp / 12 + hr / 20) / 12
+      + gamma[2] * (rp / 12 + hr / 30) / 4
+      + gamma[3] * (rp / 12 + hr / 20) / 4
+      );
+   tmp[3][0] = tmp[0][3];
+   tmp[3][1] = tmp[1][3];
+   tmp[3][2] = tmp[2][3];
+   tmp[3][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 20) / 12
+      + gamma[1] * (rp / 4 + hr / 5) / 12
+      + gamma[2] * (rp / 12 + hr / 20) / 4
+      + gamma[3] * (rp / 4 + hr / 5) / 4
+      );
+   for (int i = 0; i < 4; i++)
+   {
+      for (int k = 0; k < 4; k++)
+      {
+         local_mat[i][k] += tmp[i][k];
+      }
+   }
+}
+
+void addLocalsToGlobal(const Rectangle& rect) {
+   addLocalG(rect);
+   addLocalM(rect);
+   //addLocalB(rect);
+   //addAllToGlobal(rect);
+}
+
 void main() {
    readDataFromFiles();
    generatePortrait();
+
+   local_mat.resize(4);
+   for (auto& vec : local_mat)
+      vec.resize(4);
+   local_b.resize(4);
+
+   for (const auto& rect : rectangles)
+   {
+      addLocalsToGlobal(rect);
+   }
+   //include_s3();
+   //include_s2();
+   //include_s1();
+
+   // дохуя важные расчёты исходной функции в узлах
+   // дохуя важные расчёты невязки полученной и исходной
+   // вывод дохуя важной информации
 
    return;
 }

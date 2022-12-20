@@ -80,7 +80,7 @@
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -147,7 +147,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Исходное по Галеркину.md",
+                "file": "вычисление локальных матриц.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -164,7 +164,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Исходное по Галеркину.md",
+                "file": "вычисление локальных матриц.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -187,7 +187,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Исходное по Галеркину.md"
+                "file": "вычисление локальных матриц.md"
               }
             }
           }
@@ -198,12 +198,12 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "5f4edf85754d4d44",
+  "active": "02c54893b0d38f3a",
   "lastOpenFiles": [
     "Начало начал.md",
-    "Решаемое уравнение.md",
     "вычисление локальных матриц.md",
     "Исходное по Галеркину.md",
+    "Решаемое уравнение.md",
     "Базисные функции.md",
     "Основные формулы с кирпича.md",
     "Полезные пункты кирпича.md",

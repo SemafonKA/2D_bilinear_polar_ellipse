@@ -17,6 +17,34 @@ namespace GlobalPaths {
    const std::string s3_edgesPath = filesPath + "s3_edges.txt";
 }
 
+#pragma region TYPEDEFINES
+using Matrix = std::vector<std::vector<double>>;
+
+struct Rectangle {
+   int a = 0;
+   int b = 0;
+   int c = 0;
+   int d = 0;
+   int regionNum = 0;
+};
+
+struct Node {
+   double r = 0.0;
+   double phi = 0.0;
+};
+
+struct S1_node {
+   int node = 0;
+   int funcNum = 0;
+};
+
+struct S23_edge {
+   int node1 = 0;
+   int node2 = 0;
+   int funcNum = 0;
+};
+#pragma endregion TYPEDEFINES
+
 double f_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
@@ -28,6 +56,9 @@ double f_value(int regionNum, double r, double phi) {
          break;
    }
    return ans;
+}
+double f_value(int regionNum, Node node) {
+   return f_value(regionNum, node.r, node.phi);
 }
 
 double lambda_value(int regionNum, double r, double phi) {
@@ -42,6 +73,9 @@ double lambda_value(int regionNum, double r, double phi) {
    }
    return ans;
 }
+double lambda_value(int regionNum, Node node) {
+   return lambda_value(regionNum, node.r, node.phi);
+}
 
 double gamma_value(int regionNum, double r, double phi) {
    double ans = 0.0;
@@ -54,4 +88,7 @@ double gamma_value(int regionNum, double r, double phi) {
          break;
    }
    return ans;
+}
+double gamma_value(int regionNum, Node node) {
+   return gamma_value(regionNum, node.r, node.phi);
 }
