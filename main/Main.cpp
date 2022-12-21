@@ -366,8 +366,10 @@ void include_s3() {
       double b[2];
       double beta = (s3_beta_value(edge.funcNum, nodes[edge.node1]) 
          + s3_beta_value(edge.funcNum, nodes[edge.node2])) / 2;
-      double u = (s3_u_value(edge.funcNum, nodes[edge.node1]) 
-         + s3_u_value(edge.funcNum, nodes[edge.node2])) / 2;
+      double u[2] = { 
+         s3_u_value(edge.funcNum, nodes[edge.node1]), 
+         s3_u_value(edge.funcNum, nodes[edge.node2]) 
+      };
       double rp = nodes[edge.node1].r;
       double hr = nodes[edge.node2].r - nodes[edge.node1].r;
       double phi_s = nodes[edge.node1].phi;
@@ -379,8 +381,10 @@ void include_s3() {
          M[0][1] = beta * ((hr * rp) / 6 + (hr * hr) / 12);
          M[1][0] = M[0][1];
          M[1][1] = beta * (rp*hr/3 + hr*hr/4);
-         b[0] = beta * u * (hr * hr / 6 + rp * hr / 2);
-         b[1] = beta * u * (hr * hr / 3 + rp * hr / 2);
+         b[0] = beta * (u[0] * (hr * rp / 3 + hr * hr / 12) + u[1] * (hr * rp / 6 + hr * hr / 12));
+         b[1] = beta * (u[0] * (hr * rp / 6 + hr * hr / 12) + u[1] * (hr * rp / 3 + hr * hr / 4));
+         //b[0] = beta * u * (hr * hr / 6 + rp * hr / 2);
+         //b[1] = beta * u * (hr * hr / 3 + rp * hr / 2);
       }
       // Если краевое задано вдоль оси phi
       else
@@ -389,8 +393,10 @@ void include_s3() {
          M[0][1] = beta * rp * h_phi / 6;
          M[1][0] = M[0][1];
          M[1][1] = beta * rp * h_phi / 3;
-         b[0] = beta * u * rp * h_phi / 2;
-         b[1] = b[0];
+         b[0] = beta * rp * (u[0] * h_phi / 3 + u[1] * h_phi / 6);
+         b[1] = beta * rp * (u[0] * h_phi / 6 + u[1] * h_phi / 3);
+         //b[0] = beta * u * rp * h_phi / 2;
+         //b[1] = b[0];
       }
 
       // добавляем полученный результат в глобальную матрицу
@@ -416,8 +422,12 @@ void include_s2() {
    for (const auto& edge : s2_edges)
    {
       double b[2];
-      double theta = (s2_theta_value(edge.funcNum, nodes[edge.node1]) 
-         + s2_theta_value(edge.funcNum, nodes[edge.node2])) / 2;
+      //double theta = (s2_theta_value(edge.funcNum, nodes[edge.node1]) 
+      //   + s2_theta_value(edge.funcNum, nodes[edge.node2])) / 2;
+      double theta[2] = {
+         s2_theta_value(edge.funcNum, nodes[edge.node1]),
+         s2_theta_value(edge.funcNum, nodes[edge.node2])
+      };
       double rp = nodes[edge.node1].r;
       double hr = nodes[edge.node2].r - nodes[edge.node1].r;
       double phi_s = nodes[edge.node1].phi;
@@ -425,14 +435,19 @@ void include_s2() {
       // Если краевое задано вдоль оси r
       if (hr > 1e-7)
       {
-         b[0] = theta * (hr * hr / 6 + rp * hr / 2);
-         b[1] = theta * (hr * hr / 3 + rp * hr / 2);
+         b[0] = (theta[0] * (hr * rp / 3 + hr * hr / 12) + theta[1] * (hr * rp / 6 + hr * hr / 12));
+         b[1] = (theta[0] * (hr * rp / 6 + hr * hr / 12) + theta[1] * (hr * rp / 3 + hr * hr / 4));
+         //b[0] = theta * (hr * hr / 6 + rp * hr / 2);
+         //b[1] = theta * (hr * hr / 3 + rp * hr / 2);
       }
       // Если краевое задано вдоль оси phi
       else
       {
-         b[0] = theta * rp * h_phi / 2;
-         b[1] = b[0];
+         b[0] = rp * (theta[0] * h_phi / 3 + theta[1] * h_phi / 6);
+         b[1] = rp * (theta[0] * h_phi / 6 + theta[1] * h_phi / 3);
+
+         //b[0] = theta * rp * h_phi / 2;
+         //b[1] = b[0];
       }
 
       // добавляем полученный результат в глобальную матрицу
@@ -495,9 +510,9 @@ void main() {
 
    vector<double> q;
    q.resize(global_mat.Size());
-   IterSolvers::MSG_Assimetric::Init_Default(q.size());
+   IterSolvers::LOS::Init_LuPrecond(q.size(), global_mat);
    double eps;
-   IterSolvers::MSG_Assimetric::Default(global_mat, global_b, q, eps);
+   IterSolvers::LOS::LuPrecond(global_mat, global_b, q, eps);
    for (auto elem : q)
    {
       cout << elem << endl;
