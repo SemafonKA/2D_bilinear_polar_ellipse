@@ -64,7 +64,7 @@ void readDataFromFiles() {
    s1_nodes.resize(size);
    for (auto& s1 : s1_nodes)
    {
-      rectanglesFile >> s1.node >> s1.funcNum;
+      s1_nodesFile >> s1.node >> s1.funcNum;
    }
    s1_nodesFile.close();
 
@@ -475,8 +475,10 @@ void include_s1() {
 }
 
 void main() {
+   setlocale(LC_ALL, "ru-RU");
    readDataFromFiles();
    generatePortrait();
+   global_b.resize(global_mat.Size());
 
    local_mat.resize(4);
    for (auto& vec : local_mat)
@@ -491,6 +493,16 @@ void main() {
    include_s2();
    include_s1();
 
+   vector<double> q;
+   q.resize(global_mat.Size());
+   IterSolvers::MSG_Assimetric::Init_Default(q.size());
+   double eps;
+   IterSolvers::MSG_Assimetric::Default(global_mat, global_b, q, eps);
+   for (auto elem : q)
+   {
+      cout << elem << endl;
+   }
+   cout << "Невязка полученного решения слау: " << eps << endl;
    // дохуя важные расчёты исходной функции в узлах
    // дохуя важные расчёты невязки полученной и исходной
    // вывод дохуя важной информации

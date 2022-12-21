@@ -49,7 +49,7 @@ double f_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
    {
-      //case 0: ans = 0.0; break;
+      case 0: ans = 8.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции f для региона с номером " + std::to_string(regionNum) + " не найдено.");
@@ -65,7 +65,7 @@ double lambda_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
    {
-      //case 0: ans = 0.0; break;
+      case 0: ans = 1.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции lambda для региона с номером " + std::to_string(regionNum) + " не найдено.");
@@ -81,7 +81,7 @@ double gamma_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
    {
-      //case 0: ans = 0.0; break;
+      case 0: ans = 2.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции gamma для региона с номером " + std::to_string(regionNum) + " не найдено.");
@@ -97,7 +97,7 @@ double s3_beta_value(int s3_funcNum, Node node) {
    double ans = 0.0;
    switch (s3_funcNum)
    {
-      //case 0: ans = 0.0; break;
+      case 0: ans = 1.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
@@ -110,7 +110,7 @@ double s3_u_value(int s3_funcNum, Node node) {
    double ans = 0.0;
    switch (s3_funcNum)
    {
-      //case 0: ans = 0.0; break;
+      case 0: ans = 4.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции U_beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
@@ -123,8 +123,8 @@ double s2_theta_value(int s2_funcNum, Node node) {
    double ans = 0.0;
    switch (s2_funcNum)
    {
-      //case 0: ans = 0.0; break;
-      //case 1: ans = 1.0; break;
+      case 0: ans = 0.0; break;
+      case 1: ans = 0.0; break;
       default:
          throw std::runtime_error("Значения функции theta для s2-краевого с номером " + std::to_string(s2_funcNum) + " не найдено.");
          break;
@@ -136,7 +136,7 @@ double s1_u_value(int s1_funcNum, Node node) {
    double ans = 0.0;
    switch (s1_funcNum)
    {
-      //case 0: ans = 0.0; break;
+      case 0: ans = 4.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции u для s1-краевого с номером " + std::to_string(s1_funcNum) + " не найдено.");
