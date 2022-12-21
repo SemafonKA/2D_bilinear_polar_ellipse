@@ -102,10 +102,10 @@ void generatePortrait() {
       int elems[4] = { rect.a, rect.b, rect.c, rect.d };
       for (int i = 0; i < 4; i++)
       {
-         for (int k = 0; k < 4; k++)
+         for (int k = 0; k < i; k++)
          {
-            // Если элемент на диагонали или в верхнем треугольнике, то скипаем
-            if (i == k || elems[k] > elems[i])
+            // Если элемент в верхнем треугольнике, то скипаем
+            if (elems[k] > elems[i])
             {
                continue;
             }
@@ -252,11 +252,226 @@ void addLocalM(const Rectangle& rect) {
    }
 }
 
+void addLocalB(const Rectangle& rect) {
+   double rp = nodes[rect.a].r;
+   double hr = nodes[rect.b].r - nodes[rect.a].r;
+   double phi_s = nodes[rect.a].phi;
+   double h_phi = nodes[rect.c].phi - nodes[rect.a].phi;
+   double f[4] = {
+      f_value(rect.regionNum, nodes[rect.a]),
+      f_value(rect.regionNum, nodes[rect.b]),
+      f_value(rect.regionNum, nodes[rect.c]),
+      f_value(rect.regionNum, nodes[rect.d])
+   };
+   double tmp[4][4];
+
+   // Матрица массы с gamma = const = 1
+   tmp[0][0] = hr * h_phi * ((rp / 4 + hr / 20) / 4
+      +  (rp / 12 + hr / 30) / 4
+      + (rp / 4 + hr / 20) / 12
+      +  (rp / 12 + hr / 30) / 12
+      );
+   tmp[0][1] = hr * h_phi * ((rp / 12 + hr / 30) / 4
+      + (rp / 12 + hr / 20) / 4
+      + (rp / 12 + hr / 30) / 12
+      + (rp / 12 + hr / 20) / 12
+      );
+   tmp[0][2] = hr * h_phi * ((rp / 4 + hr / 20) / 12
+      + (rp / 12 + hr / 30) / 12
+      + (rp / 4 + hr / 20) / 12
+      + (rp / 12 + hr / 30) / 12
+      );
+   tmp[0][3] = hr * h_phi * ((rp / 12 + hr / 30) / 12
+      + (rp / 12 + hr / 20) / 12
+      + (rp / 12 + hr / 30) / 12
+      + (rp / 12 + hr / 20) / 12
+      );
+   tmp[1][0] = tmp[0][1];
+   tmp[1][1] = hr * h_phi * ((rp / 12 + hr / 20) / 4
+      + (rp / 4 + hr / 5) / 4
+      + (rp / 12 + hr / 20) / 12
+      + (rp / 4 + hr / 5) / 12
+      );
+   tmp[1][2] = hr * h_phi * ((rp / 12 + hr / 30) / 12
+      + (rp / 12 + hr / 20) / 12
+      + (rp / 12 + hr / 30) / 12
+      + (rp / 12 + hr / 20) / 12
+      );
+   tmp[1][3] = hr * h_phi * ((rp / 12 + hr / 20) / 12
+      + (rp / 4 + hr / 5) / 12
+      + (rp / 12 + hr / 20) / 12
+      + (rp / 4 + hr / 5) / 12
+      );
+   tmp[2][0] = tmp[0][2];
+   tmp[2][1] = tmp[1][2];
+   tmp[2][2] = hr * h_phi * ((rp / 4 + hr / 20) / 12
+      + (rp / 12 + hr / 30) / 12
+      + (rp / 4 + hr / 20) / 4
+      + (rp / 12 + hr / 30) / 4
+      );
+   tmp[2][3] = hr * h_phi * ((rp / 12 + hr / 30) / 12
+      + (rp / 12 + hr / 20) / 12
+      + (rp / 12 + hr / 30) / 4
+      + (rp / 12 + hr / 20) / 4
+      );
+   tmp[3][0] = tmp[0][3];
+   tmp[3][1] = tmp[1][3];
+   tmp[3][2] = tmp[2][3];
+   tmp[3][3] = hr * h_phi * ((rp / 12 + hr / 20) / 12
+      + (rp / 4 + hr / 5) / 12
+      + (rp / 12 + hr / 20) / 4
+      + (rp / 4 + hr / 5) / 4
+      );
+
+   for (int i = 0; i < 4; i++)
+   {
+      double t = 0;
+      for (int k = 0; k < 4; k++)
+      {
+         t += tmp[i][k] * f[k];
+      }
+      local_b[i] = t;
+   }
+}
+
+void addLocalToGlobal(const Rectangle& rect) {
+   int elems[4] = { rect.a, rect.b, rect.c, rect.d };
+   for (int i = 0; i < 4; i++)
+   {
+      // добавляем все внедиагональные элементы на строке elems[i]
+      for (int k = 0; k < i; k++)
+      {
+         int id;
+         for (id = global_mat.ig[elems[i]]; id < global_mat.ig[elems[i] + 1] && global_mat.jg[id] != elems[k]; id++);
+         global_mat.ggl[id] += local_mat[i][k];
+         global_mat.ggu[id] += local_mat[i][k];
+      }
+      // добавляем диагональные элементы и вектор b
+      global_mat.di[elems[i]] += local_mat[i][i];
+      global_b[elems[i]] += local_b[i];
+   }
+}
+
 void addLocalsToGlobal(const Rectangle& rect) {
    addLocalG(rect);
    addLocalM(rect);
-   //addLocalB(rect);
-   //addAllToGlobal(rect);
+   addLocalB(rect);
+   addLocalToGlobal(rect);
+}
+
+void include_s3() {
+   for (const auto& edge : s3_edges)
+   {
+      double M[2][2];
+      double b[2];
+      double beta = (s3_beta_value(edge.funcNum, nodes[edge.node1]) 
+         + s3_beta_value(edge.funcNum, nodes[edge.node2])) / 2;
+      double u = (s3_u_value(edge.funcNum, nodes[edge.node1]) 
+         + s3_u_value(edge.funcNum, nodes[edge.node2])) / 2;
+      double rp = nodes[edge.node1].r;
+      double hr = nodes[edge.node2].r - nodes[edge.node1].r;
+      double phi_s = nodes[edge.node1].phi;
+      double h_phi = nodes[edge.node2].phi - nodes[edge.node1].phi;
+      // Если краевое задано вдоль оси r
+      if (hr > 1e-7)
+      {
+         M[0][0] = beta * ((hr * hr) / 12 + (rp * hr) / 3);
+         M[0][1] = beta * ((hr * rp) / 6 + (hr * hr) / 12);
+         M[1][0] = M[0][1];
+         M[1][1] = beta * (rp*hr/3 + hr*hr/4);
+         b[0] = beta * u * (hr * hr / 6 + rp * hr / 2);
+         b[1] = beta * u * (hr * hr / 3 + rp * hr / 2);
+      }
+      // Если краевое задано вдоль оси phi
+      else
+      {
+         M[0][0] = beta * rp * h_phi / 3;
+         M[0][1] = beta * rp * h_phi / 6;
+         M[1][0] = M[0][1];
+         M[1][1] = beta * rp * h_phi / 3;
+         b[0] = beta * u * rp * h_phi / 2;
+         b[1] = b[0];
+      }
+
+      // добавляем полученный результат в глобальную матрицу
+      int elems[2] = { edge.node1, edge.node2 };
+      for (int i = 0; i < 2; i++)
+      {
+         // добавляем все внедиагональные элементы на строке elems[i]
+         for (int k = 0; k < i; k++)
+         {
+            int id;
+            for (id = global_mat.ig[elems[i]]; id < global_mat.ig[elems[i] + 1] && global_mat.jg[id] != elems[k]; id++);
+            global_mat.ggl[id] += M[i][k];
+            global_mat.ggu[id] += M[i][k];
+         }
+         // добавляем диагональные элементы и вектор b
+         global_mat.di[elems[i]] += M[i][i];
+         global_b[elems[i]] += b[i];
+      }
+   }
+}
+
+void include_s2() {
+   for (const auto& edge : s2_edges)
+   {
+      double b[2];
+      double theta = (s2_theta_value(edge.funcNum, nodes[edge.node1]) 
+         + s2_theta_value(edge.funcNum, nodes[edge.node2])) / 2;
+      double rp = nodes[edge.node1].r;
+      double hr = nodes[edge.node2].r - nodes[edge.node1].r;
+      double phi_s = nodes[edge.node1].phi;
+      double h_phi = nodes[edge.node2].phi - nodes[edge.node1].phi;
+      // Если краевое задано вдоль оси r
+      if (hr > 1e-7)
+      {
+         b[0] = theta * (hr * hr / 6 + rp * hr / 2);
+         b[1] = theta * (hr * hr / 3 + rp * hr / 2);
+      }
+      // Если краевое задано вдоль оси phi
+      else
+      {
+         b[0] = theta * rp * h_phi / 2;
+         b[1] = b[0];
+      }
+
+      // добавляем полученный результат в глобальную матрицу
+      int elems[2] = { edge.node1, edge.node2 };
+      for (int i = 0; i < 2; i++)
+      {
+         // добавляем вектор b
+         global_b[elems[i]] += b[i];
+      }
+   }
+}
+
+void include_s1() {
+   for (const auto& node : s1_nodes)
+   {
+      double u = s1_u_value(node.funcNum, nodes[node.node]);
+
+      // ставим на диагональ значение 1
+      global_mat.di[node.node] = 1;
+      // ставим в соответствующую ячейку вектора b значение u
+      global_b[node.node] = u;
+      // зануляем строку в нижнем треугольнике
+      for (int j = global_mat.ig[node.node]; j < global_mat.ig[node.node + 1]; j++)
+      {
+         global_mat.ggl[j] = 0;
+      }
+      // зануляем строку в верхнем треугольнике
+      for (int i = node.node + 1; i < global_mat.Size(); i++)
+      {
+         for (int j = global_mat.ig[i]; j < global_mat.ig[i + 1]; j++)
+         {
+            if (global_mat.jg[j] == node.node)
+            {
+               global_mat.ggu[j] = 0;
+               break;
+            }
+         }
+      }
+   }
 }
 
 void main() {
@@ -272,9 +487,9 @@ void main() {
    {
       addLocalsToGlobal(rect);
    }
-   //include_s3();
-   //include_s2();
-   //include_s1();
+   include_s3();
+   include_s2();
+   include_s1();
 
    // дохуя важные расчёты исходной функции в узлах
    // дохуя важные расчёты невязки полученной и исходной
