@@ -97,7 +97,7 @@ double s3_beta_value(int s3_funcNum, Node node) {
    double ans = 0.0;
    switch (s3_funcNum)
    {
-      case 0: ans = 1.0; break;
+      //case 0: ans = 1.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
@@ -110,7 +110,7 @@ double s3_u_value(int s3_funcNum, Node node) {
    double ans = 0.0;
    switch (s3_funcNum)
    {
-      case 0: ans = 1.0; break;
+      //case 0: ans = 1.0; break;
       //case 1: ans = 1.0; break;
       default:
          throw std::runtime_error("Значения функции U_beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
@@ -123,7 +123,7 @@ double s2_theta_value(int s2_funcNum, Node node) {
    double ans = 0.0;
    switch (s2_funcNum)
    {
-      //case 0: ans = 0.0; break;
+      case 0: ans = 0.0; break;
       //case 1: ans = 0.0; break;
       default:
          throw std::runtime_error("Значения функции theta для s2-краевого с номером " + std::to_string(s2_funcNum) + " не найдено.");

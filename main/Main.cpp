@@ -513,14 +513,12 @@ void main() {
    IterSolvers::LOS::Init_LuPrecond(q.size(), global_mat);
    double eps;
    IterSolvers::LOS::LuPrecond(global_mat, global_b, q, eps);
+   cout << "Полученное решение: " << endl;
+   cout.precision(14); cout.setf(ios_base::fixed);
    for (auto elem : q)
    {
       cout << elem << endl;
    }
-   cout << "Невязка полученного решения слау: " << eps << endl;
-   // дохуя важные расчёты исходной функции в узлах
-   // дохуя важные расчёты невязки полученной и исходной
-   // вывод дохуя важной информации
 
    return;
 }

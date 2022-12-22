@@ -20,6 +20,18 @@
             }
           },
           {
+            "id": "e23b313bdc2512f3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "конечноэлементная СЛАУ.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
             "id": "5d1b0461069a6c65",
             "type": "leaf",
             "state": {
@@ -99,7 +111,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "вычисление локальных матриц.md",
+                "file": "конечноэлементная СЛАУ.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -116,7 +128,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "вычисление локальных матриц.md",
+                "file": "конечноэлементная СЛАУ.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -139,7 +151,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "вычисление локальных матриц.md"
+                "file": "конечноэлементная СЛАУ.md"
               }
             }
           }
@@ -150,15 +162,25 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "5d1b0461069a6c65",
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false
+    }
+  },
+  "active": "e23b313bdc2512f3",
   "lastOpenFiles": [
     "Начало начал.md",
+    "вычисление локальных матриц.md",
     "Базисные функции.md",
     "конечноэлементная СЛАУ.md",
     "Исходное по Галеркину.md",
     "Решаемое уравнение.md",
     "хранение и генерация сетки.md",
-    "вычисление локальных матриц.md",
     "Полезные пункты кирпича.md",
     "Основные формулы с кирпича.md",
     "Программа решения СЛАУ методом МСГ или ЛОС с предобуславливанием.md"
