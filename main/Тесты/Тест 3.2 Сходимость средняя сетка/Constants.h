@@ -49,7 +49,7 @@ double f_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
    {
-      case 0: ans = r-1/r; break;
+      case 0: ans = r - 1/r; break;
       //case 1: ans = r; break;
       default:
          throw std::runtime_error("Значения функции f для региона с номером " + std::to_string(regionNum) + " не найдено.");
@@ -137,8 +137,10 @@ double s1_u_value(int s1_funcNum, Node node) {
    switch (s1_funcNum)
    {
       case 0: ans = 1.0; break;
-      case 1: ans = 4.0; break;
-      case 2: ans = 7.0; break;
+      case 1: ans = 2.5; break;
+      case 2: ans = 4; break;
+      case 3: ans = 5.5; break;
+      case 4: ans = 7; break;
       default:
          throw std::runtime_error("Значения функции u для s1-краевого с номером " + std::to_string(s1_funcNum) + " не найдено.");
          break;

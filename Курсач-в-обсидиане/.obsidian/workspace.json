@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "2c3859e32b8ae39a",
+        "id": "6d05aa818b808920",
         "type": "tabs",
         "children": [
           {
-            "id": "a12029acd5856ed8",
+            "id": "c43528d53e7a2a4d",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -18,33 +18,8 @@
                 "source": false
               }
             }
-          },
-          {
-            "id": "e23b313bdc2512f3",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "конечноэлементная СЛАУ.md",
-                "mode": "source",
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "5d1b0461069a6c65",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "вычисление локальных матриц.md",
-                "mode": "source",
-                "source": false
-              }
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -94,8 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "6b7faaf70f9a43ee",
@@ -111,7 +85,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "конечноэлементная СЛАУ.md",
+                "file": "Начало начал.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -128,7 +102,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "конечноэлементная СЛАУ.md",
+                "file": "Начало начал.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -151,7 +125,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "конечноэлементная СЛАУ.md"
+                "file": "Начало начал.md"
               }
             }
           }
@@ -172,17 +146,17 @@
       "command-palette:Открыть палитру команд": false
     }
   },
-  "active": "e23b313bdc2512f3",
+  "active": "c43528d53e7a2a4d",
   "lastOpenFiles": [
     "Начало начал.md",
+    "Без названия.canvas",
+    "Тестирование.md",
+    "Отчёт.md",
+    "Описание структур данных области и сетки.md",
+    "Рисуночки.md",
+    "Исследование.md",
     "вычисление локальных матриц.md",
-    "Базисные функции.md",
     "конечноэлементная СЛАУ.md",
-    "Исходное по Галеркину.md",
-    "Решаемое уравнение.md",
-    "хранение и генерация сетки.md",
-    "Полезные пункты кирпича.md",
-    "Основные формулы с кирпича.md",
-    "Программа решения СЛАУ методом МСГ или ЛОС с предобуславливанием.md"
+    "Базисные функции.md"
   ]
 }

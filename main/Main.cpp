@@ -104,7 +104,7 @@ void generatePortrait() {
       {
          for (int k = 0; k < i; k++)
          {
-            // Если элемент в верхнем треугольнике, то скипаем
+            // Если элемент в верхнем прямоугольнике, то скипаем
             if (elems[k] > elems[i])
             {
                continue;
@@ -136,9 +136,9 @@ void generatePortrait() {
 
 void addLocalG(const Rectangle& rect) {
    double rp = nodes[rect.a].r;
-   double hr = nodes[rect.b].r - nodes[rect.a].r;
+   double hr = abs(nodes[rect.b].r - nodes[rect.a].r);
    double phi_s = nodes[rect.a].phi;
-   double h_phi = nodes[rect.c].phi - nodes[rect.a].phi;
+   double h_phi = abs(nodes[rect.c].phi - nodes[rect.a].phi);
    double lambda = (lambda_value(rect.regionNum, nodes[rect.a]) +
       lambda_value(rect.regionNum, nodes[rect.b]) +
       lambda_value(rect.regionNum, nodes[rect.c]) +
@@ -147,14 +147,42 @@ void addLocalG(const Rectangle& rect) {
    double integrals[9];
    integrals[0] = rp / hr + 0.5;
    integrals[1] = -integrals[0];
-   integrals[2] = (((rp * rp) / (hr * hr)) + (2 * rp / hr) + 1) * std::log((rp + hr) / rp) - (rp / hr) - 1.5;
-   integrals[3] = -(rp / hr) * std::log((rp + hr) / rp) + 1;
-   integrals[4] = -(rp / hr + (rp * rp) / (hr * hr)) * std::log((rp + hr) / rp) + (rp / hr) + 0.5;
+   integrals[2] = (((rp * rp) / (hr * hr)) + (2 * rp / hr) + 1) * std::log(abs((rp + hr) / rp)) - (rp / hr) - 1.5;
+   integrals[3] = (rp*rp)/(hr*hr) * std::log(abs((rp+hr) / rp)) - rp/hr + 0.5;
+   integrals[4] = - (rp/hr + rp*rp/(hr*hr)) * std::log(abs((rp+hr)/rp)) + rp/hr + 0.5;
    integrals[5] = h_phi / 3;
    integrals[6] = h_phi / 6;
    integrals[7] = 1 / h_phi;
    integrals[8] = -integrals[7];
 
+   // Численное интегрирование по Гауссу 3 порядка
+   //double rValue[2] = {
+   //   (2*rp + hr) / 2 - (hr) / (2*sqrt(3)),
+   //   (2 * rp + hr) / 2 + (hr) / (2 * sqrt(3))
+   //};
+   //double phiValue[2] = {
+   //   (2 * phi_s + h_phi) / 2 - (h_phi) / (2 * sqrt(3)),
+   //   (2 * phi_s + h_phi) / 2 + (h_phi) / (2 * sqrt(3))
+   //};
+   //integrals[0] = 1.0/2 * (rValue[0] + rValue[1]) / (hr);
+   //integrals[1] = -integrals[0];
+   //integrals[2] = 1.0/2 * (
+   //     (rp + hr - rValue[0]) * (rp + hr - rValue[0]) / rValue[0]
+   //   + (rp + hr - rValue[1]) * (rp + hr - rValue[1]) / rValue[1]) / hr;
+   //integrals[3] = 1.0 / 2 * (
+   //     (rValue[0] - rp) * (rValue[0] - rp) / rValue[0]
+   //   + (rValue[1] - rp) * (rValue[1] - rp) / rValue[1]) / hr;
+   //integrals[4] = 1.0 / 2 * (
+   //     (rp + hr - rValue[0]) * (rValue[0] - rp) / rValue[0]
+   //   + (rp + hr - rValue[1]) * (rValue[1] - rp) / rValue[1]) / hr;
+   //integrals[5] = 1.0 / 2 * (
+   //     (phi_s + h_phi - phiValue[0]) * (phi_s + h_phi - phiValue[0])
+   //   + (phi_s + h_phi - phiValue[1]) * (phi_s + h_phi - phiValue[1])) / h_phi;
+   //integrals[6] = 1.0 / 2 * (
+   //     (phi_s + h_phi - phiValue[0]) * (phiValue[0] - phi_s)
+   //   + (phi_s + h_phi - phiValue[1]) * (phiValue[1] - phi_s)) / h_phi;
+   //integrals[7] = 1.0 / h_phi;
+   //integrals[8] = -integrals[7];
 
    local_mat[0][0] = lambda * (integrals[0] * integrals[5] + integrals[2] * integrals[7]);
    local_mat[0][1] = lambda * (integrals[1] * integrals[5] + integrals[4] * integrals[7]);
@@ -172,13 +200,26 @@ void addLocalG(const Rectangle& rect) {
    local_mat[3][1] = local_mat[1][3];
    local_mat[3][2] = local_mat[2][3];
    local_mat[3][3] = lambda * (integrals[0] * integrals[5] + integrals[3] * integrals[7]);
+
+
+   cout << "Local_G:" << endl;
+   for (int i = 0; i < 4; i++)
+   {
+      double tmp = 0;
+      for (int j = 0; j < 4; j++)
+      {
+         tmp += local_mat[i][j];
+      }
+      cout << " " << tmp;
+   }
+   cout << endl;
 }
 
 void addLocalM(const Rectangle& rect) {
    double rp = nodes[rect.a].r;
-   double hr = nodes[rect.b].r - nodes[rect.a].r;
+   double hr = abs(nodes[rect.b].r - nodes[rect.a].r);
    double phi_s = nodes[rect.a].phi;
-   double h_phi = nodes[rect.c].phi - nodes[rect.a].phi;
+   double h_phi = abs(nodes[rect.c].phi - nodes[rect.a].phi);
    double gamma[4] = {
       gamma_value(rect.regionNum, nodes[rect.a]),
       gamma_value(rect.regionNum, nodes[rect.b]),
@@ -187,15 +228,15 @@ void addLocalM(const Rectangle& rect) {
    };
    double tmp[4][4];
 
-   tmp[0][0] = hr * h_phi * (gamma[0] * (rp / 4 + hr / 20) / 4
-      + gamma[1] * (rp / 12 + hr / 30) / 4
-      + gamma[2] * (rp / 4 + hr / 20) / 12
-      + gamma[3] * (rp / 12 + hr / 30)  / 12
+   tmp[0][0] = hr * h_phi * ((gamma[0] * (rp / 4 + hr / 20) / 4)
+      + (gamma[1] * (rp / 12 + hr / 30) / 4)
+      + (gamma[2] * (rp / 4 + hr / 20) / 12)
+      + (gamma[3] * (rp / 12 + hr / 30) / 12)
       );
-   tmp[0][1] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 4
-      + gamma[1] * (rp / 12 + hr / 20) / 4
-      + gamma[2] * (rp / 12 + hr / 30) / 12
-      + gamma[3] * (rp / 12 + hr / 20)  / 12
+   tmp[0][1] = hr * h_phi * ((gamma[0] * (rp / 12 + hr / 30) / 4)
+      + (gamma[1] * (rp / 12 + hr / 20) / 4)
+      + (gamma[2] * (rp / 12 + hr / 30) / 12)
+      + (gamma[3] * (rp / 12 + hr / 20) / 12)
       );
    tmp[0][2] = hr * h_phi * (gamma[0] * (rp / 4 + hr / 20) / 12
       + gamma[1] * (rp / 12 + hr / 30) / 12
@@ -250,6 +291,19 @@ void addLocalM(const Rectangle& rect) {
          local_mat[i][k] += tmp[i][k];
       }
    }
+
+   //cout << "Local_M" << endl;
+   //for (int i = 0; i < 4; i++)
+   //{
+   //   double tmp = 0;
+   //   for (int j = 0; j < 4; j++)
+   //   {
+   //      tmp += local_mat[i][j];
+   //   }
+   //   cout << " " << tmp;
+   //}
+   //cout << endl;
+
 }
 
 void addLocalB(const Rectangle& rect) {
@@ -341,8 +395,14 @@ void addLocalToGlobal(const Rectangle& rect) {
       // добавляем все внедиагональные элементы на строке elems[i]
       for (int k = 0; k < i; k++)
       {
+         // Если элемент в верхнем прямоугольнике, то скипаем
+         if (elems[k] > elems[i])
+         {
+            continue;
+         }
+
          int id;
-         for (id = global_mat.ig[elems[i]]; id < global_mat.ig[elems[i] + 1] && global_mat.jg[id] != elems[k]; id++);
+         for (id = global_mat.ig[elems[i]]; id < global_mat.ig[elems[i] + 1ll] && global_mat.jg[id] != elems[k]; id++);
          global_mat.ggl[id] += local_mat[i][k];
          global_mat.ggu[id] += local_mat[i][k];
       }
@@ -383,8 +443,6 @@ void include_s3() {
          M[1][1] = beta * (rp*hr/3 + hr*hr/4);
          b[0] = beta * (u[0] * (hr * rp / 3 + hr * hr / 12) + u[1] * (hr * rp / 6 + hr * hr / 12));
          b[1] = beta * (u[0] * (hr * rp / 6 + hr * hr / 12) + u[1] * (hr * rp / 3 + hr * hr / 4));
-         //b[0] = beta * u * (hr * hr / 6 + rp * hr / 2);
-         //b[1] = beta * u * (hr * hr / 3 + rp * hr / 2);
       }
       // Если краевое задано вдоль оси phi
       else
@@ -395,8 +453,6 @@ void include_s3() {
          M[1][1] = beta * rp * h_phi / 3;
          b[0] = beta * rp * (u[0] * h_phi / 3 + u[1] * h_phi / 6);
          b[1] = beta * rp * (u[0] * h_phi / 6 + u[1] * h_phi / 3);
-         //b[0] = beta * u * rp * h_phi / 2;
-         //b[1] = b[0];
       }
 
       // добавляем полученный результат в глобальную матрицу
@@ -422,8 +478,6 @@ void include_s2() {
    for (const auto& edge : s2_edges)
    {
       double b[2];
-      //double theta = (s2_theta_value(edge.funcNum, nodes[edge.node1]) 
-      //   + s2_theta_value(edge.funcNum, nodes[edge.node2])) / 2;
       double theta[2] = {
          s2_theta_value(edge.funcNum, nodes[edge.node1]),
          s2_theta_value(edge.funcNum, nodes[edge.node2])
@@ -437,17 +491,12 @@ void include_s2() {
       {
          b[0] = (theta[0] * (hr * rp / 3 + hr * hr / 12) + theta[1] * (hr * rp / 6 + hr * hr / 12));
          b[1] = (theta[0] * (hr * rp / 6 + hr * hr / 12) + theta[1] * (hr * rp / 3 + hr * hr / 4));
-         //b[0] = theta * (hr * hr / 6 + rp * hr / 2);
-         //b[1] = theta * (hr * hr / 3 + rp * hr / 2);
       }
       // Если краевое задано вдоль оси phi
       else
       {
          b[0] = rp * (theta[0] * h_phi / 3 + theta[1] * h_phi / 6);
          b[1] = rp * (theta[0] * h_phi / 6 + theta[1] * h_phi / 3);
-
-         //b[0] = theta * rp * h_phi / 2;
-         //b[1] = b[0];
       }
 
       // добавляем полученный результат в глобальную матрицу
@@ -489,7 +538,7 @@ void include_s1() {
    }
 }
 
-void main() {
+int main() {
    setlocale(LC_ALL, "ru-RU");
    readDataFromFiles();
    generatePortrait();
@@ -510,15 +559,19 @@ void main() {
 
    vector<double> q;
    q.resize(global_mat.Size());
-   IterSolvers::LOS::Init_LuPrecond(q.size(), global_mat);
+   IterSolvers::MSG_Assimetric::Init_Default(q.size());
+   //IterSolvers::LOS::Init_LuPrecond(q.size(), global_mat);
+   IterSolvers::minEps = 1e-20;
    double eps;
-   IterSolvers::LOS::LuPrecond(global_mat, global_b, q, eps);
+   IterSolvers::MSG_Assimetric::Default(global_mat, global_b, q, eps);
+   //IterSolvers::LOS::LuPrecond(global_mat, global_b, q, eps);
+   IterSolvers::Destruct();
+
    cout << "Полученное решение: " << endl;
-   cout.precision(14); cout.setf(ios_base::fixed);
    for (auto elem : q)
    {
-      cout << elem << endl;
+      cout << format("{0:<.14f}", elem) << endl;
    }
 
-   return;
+   return 0;
 }
