@@ -48,8 +48,7 @@ namespace IterSolvers {
       if (vec == nullptr)
       {
          vec = new vector<double>(size);
-      }
-      else if (vec->size() != size)
+      } else if (vec->size() != size)
       {
          vec->resize(size);
       }
@@ -123,12 +122,10 @@ namespace IterSolvers {
             if (isinf(eps))
             {
                cout << "Выход по переполнению метода" << endl << endl;
-            }
-            else if (iter > maxIter)
+            } else if (iter > maxIter)
             {
                cout << "Выход по числу итераций" << endl << endl;
-            }
-            else
+            } else
             {
                cout << "Выход по относительной невязке" << endl << endl;
             }
@@ -136,7 +133,6 @@ namespace IterSolvers {
 
          return iter - 1;
       }
-
 
       void Init_DiagPrecond(size_t size) {
          Init_Default(size);
@@ -218,12 +214,10 @@ namespace IterSolvers {
             if (isinf(eps))
             {
                cout << "Выход по переполнению метода" << endl << endl;
-            }
-            else if (iter > maxIter)
+            } else if (iter > maxIter)
             {
                cout << "Выход по числу итераций" << endl << endl;
-            }
-            else
+            } else
             {
                cout << "Выход по относительной невязке" << endl << endl;
             }
@@ -231,7 +225,6 @@ namespace IterSolvers {
 
          return iter - 1;
       }
-
 
       void Init_LuPrecond(size_t diSize, const SparseMatrix& A) {
          VecInit(_tmp1, diSize); // Массив для вектора r метода
@@ -243,8 +236,7 @@ namespace IterSolvers {
          if (_lu_mat == nullptr)
          {
             _lu_mat = new LU(A);
-         }
-         else
+         } else
          {
             _lu_mat->MakeLuFor(A);
          }
@@ -325,12 +317,10 @@ namespace IterSolvers {
             if (isinf(eps))
             {
                cout << "Выход по переполнению метода" << endl << endl;
-            }
-            else if (iter > maxIter)
+            } else if (iter > maxIter)
             {
                cout << "Выход по числу итераций" << endl << endl;
-            }
-            else
+            } else
             {
                cout << "Выход по относительной невязке" << endl << endl;
             }
@@ -343,7 +333,6 @@ namespace IterSolvers {
    namespace LOS {
       size_t resetIter = 10;
 
-
       void Init_Default(size_t size) {
          VecInit(_tmp1, size); // Массив для вектора r метода
          VecInit(_tmp2, size); // Массив для вектора z
@@ -352,7 +341,7 @@ namespace IterSolvers {
       }
 
       size_t Default(const SparseMatrix& A, const vector<double>& f, vector<double>& x, double& eps, bool debugOutput) {
-         uint16_t size = x.size();
+         auto size = x.size();
 
          vector<double>& r = *_tmp1;
          A.MultToVec(x, r);
@@ -420,12 +409,10 @@ namespace IterSolvers {
             if (isinf(eps))
             {
                cout << "Выход по переполнению метода" << endl << endl;
-            }
-            else if (iter > maxIter)
+            } else if (iter > maxIter)
             {
                cout << "Выход по числу итераций" << endl << endl;
-            }
-            else
+            } else
             {
                cout << "Выход по относительной невязке" << endl << endl;
             }
@@ -433,7 +420,6 @@ namespace IterSolvers {
 
          return iter - 1;
       }
-
 
       void Init_DiagPrecond(size_t size) {
          VecInit(_tmp1, size); // Массив для вектора r метода
@@ -445,14 +431,14 @@ namespace IterSolvers {
       }
 
       size_t DiagPrecond(const SparseMatrix& A, const vector<double>& f, vector<double>& x, double& eps, bool debugOutput) {
-         uint16_t size = x.size();
+         auto size = x.size();
 
          vector<double>& D = *_tmp5;               // обратный корень от диагонали матрицы
          for (uint16_t i = 0; i < size; i++) D[i] = 1 / sqrt(A.di[i]);
 
          vector<double>& r = *_tmp1;               // r0 = L^-1 * (f - A * x)
          A.MultToVec(x, r);
-         for (uint16_t i = 0; i < size; i++) r[i] = f[i] - r[i];
+         for (auto i = 0; i < size; i++) r[i] = f[i] - r[i];
          Vec::Mult(D, r, r);
 
          vector<double>& z = *_tmp2;               // z0 = U^-1 * r
@@ -529,12 +515,10 @@ namespace IterSolvers {
             if (isinf(eps))
             {
                cout << "Выход по переполнению метода" << endl << endl;
-            }
-            else if (iter > maxIter)
+            } else if (iter > maxIter)
             {
                cout << "Выход по числу итераций" << endl << endl;
-            }
-            else
+            } else
             {
                cout << "Выход по относительной невязке" << endl << endl;
             }
@@ -542,7 +526,6 @@ namespace IterSolvers {
 
          return iter - 1;
       }
-
 
       void Init_LuPrecond(size_t diSize, const SparseMatrix& A) {
          VecInit(_tmp1, diSize); // Массив для вектора r метода
@@ -554,22 +537,21 @@ namespace IterSolvers {
          if (_lu_mat == nullptr)
          {
             _lu_mat = new LU(A);
-         }
-         else
+         } else
          {
             _lu_mat->MakeLuFor(A);
          }
       }
 
       size_t LuPrecond(const SparseMatrix& A, const vector<double>& f, vector<double>& x, double& eps, bool debugOutput) {
-         uint16_t size = x.size();
+         auto size = x.size();
 
          LU& lu = *_lu_mat;
 
          vector<double>& tmp = *_tmp5;
          vector<double>& r = *_tmp1;               // r0 = L^-1 * (f - A * x)
          A.MultToVec(x, tmp);
-         for (uint16_t i = 0; i < size; i++) tmp[i] = f[i] - tmp[i];
+         for (auto i = 0; i < size; i++) tmp[i] = f[i] - tmp[i];
          lu.LSlauSolve(tmp, r);
 
          vector<double>& z = *_tmp2;               // z0 = U^-1 * r
@@ -605,7 +587,7 @@ namespace IterSolvers {
             lu.LSlauSolve(tmp, Ar);                // Ar = L^-1 * A * U^-1 * r
             //Vec::Mult(D, r, tmp);
             //A.MultToVec(tmp, Ar);
-            //Vec::Mult(D, Ar, Ar);                  
+            //Vec::Mult(D, Ar, Ar);
 
             b = -Vec::Scalar(p, Ar) / ppScalar;    // b = - (p_k-1, L^-1 * A * U^-1 * r_k) / (p_k-1, p_k-1)
             lu.USlauSolve(r, tmp);                 // tmp = U^-1 * r_k
@@ -648,12 +630,10 @@ namespace IterSolvers {
             if (isinf(eps))
             {
                cout << "Выход по переполнению метода" << endl << endl;
-            }
-            else if (iter > maxIter)
+            } else if (iter > maxIter)
             {
                cout << "Выход по числу итераций" << endl << endl;
-            }
-            else
+            } else
             {
                cout << "Выход по относительной невязке" << endl << endl;
             }

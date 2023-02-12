@@ -26,6 +26,18 @@ struct Rectangle {
    int c = 0;
    int d = 0;
    int regionNum = 0;
+
+   std::string toString() const {
+      std::string out = "( ";
+      out += "a: " + std::to_string(a);
+      out += ", b: " + std::to_string(b);
+      out += ", c: " + std::to_string(c);
+      out += ", d: " + std::to_string(d);
+      out += ", region: " + std::to_string(regionNum);
+      out += " )";
+
+      return out;
+   }
 };
 
 struct Node {
@@ -49,11 +61,11 @@ double f_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
    {
-      case 0: ans = r-1/r; break;
-      //case 1: ans = r; break;
-      default:
-         throw std::runtime_error("Значения функции f для региона с номером " + std::to_string(regionNum) + " не найдено.");
-         break;
+   case 0: ans = r*phi - (2.0 / r); break;
+   //case 1: ans = r; break;
+   default:
+      throw std::runtime_error("Значения функции f для региона с номером " + std::to_string(regionNum) + " не найдено.");
+      break;
    }
    return ans;
 }
@@ -65,11 +77,11 @@ double lambda_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
    {
-      case 0: ans = 1; break;
-      //case 1: ans = 0.0; break;
-      default:
-         throw std::runtime_error("Значения функции lambda для региона с номером " + std::to_string(regionNum) + " не найдено.");
-         break;
+   case 0: ans = r*phi; break;
+   //case 1: ans = 0.0; break;
+   default:
+      throw std::runtime_error("Значения функции lambda для региона с номером " + std::to_string(regionNum) + " не найдено.");
+      break;
    }
    return ans;
 }
@@ -81,11 +93,11 @@ double gamma_value(int regionNum, double r, double phi) {
    double ans = 0.0;
    switch (regionNum)
    {
-      case 0: ans = 1; break;
-      //case 1: ans = r; break;
-      default:
-         throw std::runtime_error("Значения функции gamma для региона с номером " + std::to_string(regionNum) + " не найдено.");
-         break;
+   case 0: ans = r; break;
+   //case 1: ans = r; break;
+   default:
+      throw std::runtime_error("Значения функции gamma для региона с номером " + std::to_string(regionNum) + " не найдено.");
+      break;
    }
    return ans;
 }
@@ -99,9 +111,9 @@ double s3_beta_value(int s3_funcNum, Node node) {
    {
       //case 0: ans = 1; break;
       //case 1: ans = 1.0; break;
-      default:
-         throw std::runtime_error("Значения функции beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
-         break;
+   default:
+      throw std::runtime_error("Значения функции beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
+      break;
    }
    return ans;
 }
@@ -112,9 +124,9 @@ double s3_u_value(int s3_funcNum, Node node) {
    {
       //case 0: ans = node.r - 1; break;
       //case 1: ans = node.r; break;
-      default:
-         throw std::runtime_error("Значения функции U_beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
-         break;
+   default:
+      throw std::runtime_error("Значения функции U_beta для s3-краевого с номером " + std::to_string(s3_funcNum) + " не найдено.");
+      break;
    }
    return ans;
 }
@@ -125,9 +137,9 @@ double s2_theta_value(int s2_funcNum, Node node) {
    {
       //case 0: ans = 0; break;
       //case 1: ans = 0.0; break;
-      default:
-         throw std::runtime_error("Значения функции theta для s2-краевого с номером " + std::to_string(s2_funcNum) + " не найдено.");
-         break;
+   default:
+      throw std::runtime_error("Значения функции theta для s2-краевого с номером " + std::to_string(s2_funcNum) + " не найдено.");
+      break;
    }
    return ans;
 }
@@ -136,13 +148,12 @@ double s1_u_value(int s1_funcNum, Node node) {
    double ans = 0.0;
    switch (s1_funcNum)
    {
-      case 0: ans = 1.0; break;
-      case 1: ans = 4.0; break;
-      case 2: ans = 7.0; break;
-      default:
-         throw std::runtime_error("Значения функции u для s1-краевого с номером " + std::to_string(s1_funcNum) + " не найдено.");
-         break;
+   case 0: ans = 1.0; break;
+   case 1: ans = 4.0; break;
+   //case 2: ans = 7.0; break;
+   default:
+      throw std::runtime_error("Значения функции u для s1-краевого с номером " + std::to_string(s1_funcNum) + " не найдено.");
+      break;
    }
    return ans;
 }
-

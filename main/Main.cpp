@@ -1,8 +1,9 @@
-﻿#include <iostream>
-#include <fstream>
+﻿#include <fstream>
+#include <iostream>
 #include <vector>
 
 #include "ThreeSteppers/Headers/IterSolvers.h"
+#include "gaussian_quadrature_2point.h"
 
 // Файл, содержащий в себе пути до файлов, функции f, lambda и gamma
 #include "Constants.h"
@@ -30,8 +31,34 @@ vector<S23_edge> s2_edges;
 vector<S23_edge> s3_edges;
 #pragma endregion GLOBAL_OBJECTS
 
+double func_R(int ind, double rp, double hr, double r) {
+   ind &= 1;  // ind = ind % 2
+   if (ind == 0) {
+      return (rp + hr - r) / hr;
+   }
+   return (r - rp) / hr;
+}
+
+double func_R_dif(int ind, double rp, double hr, double r) {
+   static constexpr double h = 1e-5;
+   return (func_R(ind, rp, hr, r + h) - func_R(ind, rp, hr, r - h)) / (2.0 * h);
+}
+
+double func_Phi(int ind, double phi_s, double h_phi, double phi) {
+   ind /= 2;
+   if (ind == 0) {
+      return (phi_s + h_phi - phi) / h_phi;
+   }
+   return (phi - phi_s) / h_phi;
+}
+
+double func_Phi_dif(int ind, double phi_s, double h_phi, double phi) {
+   static constexpr double h = 1e-5;
+   return (func_Phi(ind, phi_s, h_phi, phi + h) - func_Phi(ind, phi_s, h_phi, phi - h)) / (2.0 * h);
+}
+
 void readDataFromFiles() {
-   // Считывание данных для структуры узлов nodes
+  // Считывание данных для структуры узлов nodes
    auto nodesFile = ifstream(GlobalPaths::nodesPath);
    if (!nodesFile.is_open())
       throw runtime_error("Не удалось открыть файл " + GlobalPaths::nodesPath);
@@ -47,7 +74,8 @@ void readDataFromFiles() {
    // Считывание данных для структуры прямоугольников rectangles
    auto rectanglesFile = ifstream(GlobalPaths::rectanglesPath);
    if (!rectanglesFile.is_open())
-      throw runtime_error("Не удалось открыть файл " + GlobalPaths::rectanglesPath);
+      throw runtime_error("Не удалось открыть файл " +
+         GlobalPaths::rectanglesPath);
    rectanglesFile >> size;
    rectangles.resize(size);
    for (auto& rect : rectangles)
@@ -99,12 +127,12 @@ void generatePortrait() {
 
    for (auto& rect : rectangles)
    {
-      int elems[4] = { rect.a, rect.b, rect.c, rect.d };
+      int elems[4] = {rect.a, rect.b, rect.c, rect.d};
       for (int i = 0; i < 4; i++)
       {
          for (int k = 0; k < i; k++)
          {
-            // Если элемент в верхнем прямоугольнике, то скипаем
+// Если элемент в верхнем прямоугольнике, то скипаем
             if (elems[k] > elems[i])
             {
                continue;
@@ -112,16 +140,20 @@ void generatePortrait() {
 
             bool isExist = false;
             // Пробегаем по всей строке для проверки, существует ли такой элемент
-            for (int it = global_mat.ig[elems[i]]; it < global_mat.ig[elems[i] + 1]; it++)
+            for (auto it = global_mat.ig[elems[i]];
+               it < global_mat.ig[elems[i] + 1ll]; it++)
             {
-               if (global_mat.jg[it] == elems[k]) isExist = true;
+               if (global_mat.jg[it] == elems[k])
+                  isExist = true;
             }
             if (!isExist)
             {
-               // Ищем, куда вставить элемент портрета
-               int it = global_mat.ig[elems[i]];
-               while (it < global_mat.ig[elems[i] + 1] && global_mat.jg[it] < elems[k]) it++;
-               // Для вставки нужно взять итератор массива от начала, так что...
+// Ищем, куда вставить элемент портрета
+               auto it = global_mat.ig[elems[i]];
+               while (it < global_mat.ig[elems[i] + 1ll] &&
+                  global_mat.jg[it] < elems[k])
+                  it++;
+                // Для вставки нужно взять итератор массива от начала, так что...
                global_mat.jg.insert(global_mat.jg.begin() + it, elems[k]);
                // Добавляем всем элементам ig с позиции elems[i]+1 один элемент
                for (int j = elems[i] + 1; j < global_mat.ig.size(); j++)
@@ -139,70 +171,43 @@ void addLocalG(const Rectangle& rect) {
    double hr = abs(nodes[rect.b].r - nodes[rect.a].r);
    double phi_s = nodes[rect.a].phi;
    double h_phi = abs(nodes[rect.c].phi - nodes[rect.a].phi);
-   double lambda = (lambda_value(rect.regionNum, nodes[rect.a]) +
-      lambda_value(rect.regionNum, nodes[rect.b]) +
-      lambda_value(rect.regionNum, nodes[rect.c]) +
-      lambda_value(rect.regionNum, nodes[rect.d])) / 4;
 
-   double integrals[9];
-   integrals[0] = rp / hr + 0.5;
-   integrals[1] = -integrals[0];
-   integrals[2] = (((rp * rp) / (hr * hr)) + (2 * rp / hr) + 1) * std::log(abs((rp + hr) / rp)) - (rp / hr) - 1.5;
-   integrals[3] = (rp*rp)/(hr*hr) * std::log(abs((rp+hr) / rp)) - rp/hr + 0.5;
-   integrals[4] = - (rp/hr + rp*rp/(hr*hr)) * std::log(abs((rp+hr)/rp)) + rp/hr + 0.5;
-   integrals[5] = h_phi / 3;
-   integrals[6] = h_phi / 6;
-   integrals[7] = 1 / h_phi;
-   integrals[8] = -integrals[7];
+   int i, j;
 
-   // Численное интегрирование по Гауссу 3 порядка
-   //double rValue[2] = {
-   //   (2*rp + hr) / 2 - (hr) / (2*sqrt(3)),
-   //   (2 * rp + hr) / 2 + (hr) / (2 * sqrt(3))
-   //};
-   //double phiValue[2] = {
-   //   (2 * phi_s + h_phi) / 2 - (h_phi) / (2 * sqrt(3)),
-   //   (2 * phi_s + h_phi) / 2 + (h_phi) / (2 * sqrt(3))
-   //};
-   //integrals[0] = 1.0/2 * (rValue[0] + rValue[1]) / (hr);
-   //integrals[1] = -integrals[0];
-   //integrals[2] = 1.0/2 * (
-   //     (rp + hr - rValue[0]) * (rp + hr - rValue[0]) / rValue[0]
-   //   + (rp + hr - rValue[1]) * (rp + hr - rValue[1]) / rValue[1]) / hr;
-   //integrals[3] = 1.0 / 2 * (
-   //     (rValue[0] - rp) * (rValue[0] - rp) / rValue[0]
-   //   + (rValue[1] - rp) * (rValue[1] - rp) / rValue[1]) / hr;
-   //integrals[4] = 1.0 / 2 * (
-   //     (rp + hr - rValue[0]) * (rValue[0] - rp) / rValue[0]
-   //   + (rp + hr - rValue[1]) * (rValue[1] - rp) / rValue[1]) / hr;
-   //integrals[5] = 1.0 / 2 * (
-   //     (phi_s + h_phi - phiValue[0]) * (phi_s + h_phi - phiValue[0])
-   //   + (phi_s + h_phi - phiValue[1]) * (phi_s + h_phi - phiValue[1])) / h_phi;
-   //integrals[6] = 1.0 / 2 * (
-   //     (phi_s + h_phi - phiValue[0]) * (phiValue[0] - phi_s)
-   //   + (phi_s + h_phi - phiValue[1]) * (phiValue[1] - phi_s)) / h_phi;
-   //integrals[7] = 1.0 / h_phi;
-   //integrals[8] = -integrals[7];
+   // [i] & [j] variables are linked to [solverFunc] function
+   auto solverFunc = [&](double r, double phi) {
+      double ans = 0.0;
+      ans += func_Phi(i, phi_s, h_phi, phi) * func_R_dif(i, rp, hr, r)
+         * func_Phi(j, phi_s, h_phi, phi) * func_R_dif(j, rp, hr, r);
+      ans += (1.0 / (r * r)) * func_R(i, rp, hr, r) * func_Phi_dif(i, phi_s, h_phi, phi) *
+         func_R(j, rp, hr, r) * func_Phi_dif(j, phi_s, h_phi, phi);
+      ans *= lambda_value(rect.regionNum, r, phi) * r;
+      return ans;
+   };
 
-   local_mat[0][0] = lambda * (integrals[0] * integrals[5] + integrals[2] * integrals[7]);
-   local_mat[0][1] = lambda * (integrals[1] * integrals[5] + integrals[4] * integrals[7]);
-   local_mat[0][2] = lambda * (integrals[0] * integrals[6] + integrals[2] * integrals[8]);
-   local_mat[0][3] = lambda * (integrals[1] * integrals[6] + integrals[4] * integrals[8]);
-   local_mat[1][0] = local_mat[0][1];
-   local_mat[1][1] = lambda * (integrals[0] * integrals[5] + integrals[3] * integrals[7]);
-   local_mat[1][2] = local_mat[0][3];
-   local_mat[1][3] = lambda * (integrals[0] * integrals[6] + integrals[3] * integrals[8]);
-   local_mat[2][0] = local_mat[0][2];
-   local_mat[2][1] = local_mat[1][2];
-   local_mat[2][2] = lambda * (integrals[0] * integrals[5] + integrals[2] * integrals[7]);
-   local_mat[2][3] = lambda * (integrals[1] * integrals[5] + integrals[4] * integrals[7]);
-   local_mat[3][0] = local_mat[0][3];
-   local_mat[3][1] = local_mat[1][3];
-   local_mat[3][2] = local_mat[2][3];
-   local_mat[3][3] = lambda * (integrals[0] * integrals[5] + integrals[3] * integrals[7]);
+   auto solver = Gaussian_2p::TwoDimentionalSolver::withStep(rp, hr, phi_s, h_phi, solverFunc);
 
+   for (i = 0; i < 4; i++) {
+      for (j = 0; j < 4; j++) {
+         local_mat[i][j] = solver.compute();
+      }
+   }
 
+  // debug output
+#ifndef NDEBUG
    cout << "Local_G:" << endl;
+   for (int i = 0; i < 4; i++)
+   {
+      for (int j = 0; j < 4; j++)
+      {
+         cout << std::format(" {: .5f}", local_mat[i][j]);
+      }
+      cout << endl;
+   }
+   cout << endl;
+
+  // All tmp must be almost equal zero
+   cout << "All this values must be zero or almost equal to it:\n";
    for (int i = 0; i < 4; i++)
    {
       double tmp = 0;
@@ -210,9 +215,10 @@ void addLocalG(const Rectangle& rect) {
       {
          tmp += local_mat[i][j];
       }
-      cout << " " << tmp;
+      cout << " " << (tmp > 1e-15 ? tmp : 0);
    }
-   cout << endl;
+   cout << endl << endl;
+#endif
 }
 
 void addLocalM(const Rectangle& rect) {
@@ -220,70 +226,27 @@ void addLocalM(const Rectangle& rect) {
    double hr = abs(nodes[rect.b].r - nodes[rect.a].r);
    double phi_s = nodes[rect.a].phi;
    double h_phi = abs(nodes[rect.c].phi - nodes[rect.a].phi);
-   double gamma[4] = {
-      gamma_value(rect.regionNum, nodes[rect.a]),
-      gamma_value(rect.regionNum, nodes[rect.b]),
-      gamma_value(rect.regionNum, nodes[rect.c]),
-      gamma_value(rect.regionNum, nodes[rect.d])
-   };
-   double tmp[4][4];
+   double tmp[4][4] = {};
 
-   tmp[0][0] = hr * h_phi * ((gamma[0] * (rp / 4 + hr / 20) / 4)
-      + (gamma[1] * (rp / 12 + hr / 30) / 4)
-      + (gamma[2] * (rp / 4 + hr / 20) / 12)
-      + (gamma[3] * (rp / 12 + hr / 30) / 12)
-      );
-   tmp[0][1] = hr * h_phi * ((gamma[0] * (rp / 12 + hr / 30) / 4)
-      + (gamma[1] * (rp / 12 + hr / 20) / 4)
-      + (gamma[2] * (rp / 12 + hr / 30) / 12)
-      + (gamma[3] * (rp / 12 + hr / 20) / 12)
-      );
-   tmp[0][2] = hr * h_phi * (gamma[0] * (rp / 4 + hr / 20) / 12
-      + gamma[1] * (rp / 12 + hr / 30) / 12
-      + gamma[2] * (rp / 4 + hr / 20) / 12
-      + gamma[3] * (rp / 12 + hr / 30)  / 12
-      );
-   tmp[0][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 12
-      + gamma[1] * (rp / 12 + hr / 20) / 12
-      + gamma[2] * (rp / 12 + hr / 30) / 12
-      + gamma[3] * (rp / 12 + hr / 20)  / 12
-      );
-   tmp[1][0] = tmp[0][1];
-   tmp[1][1] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 20) / 4
-      + gamma[1] * (rp / 4 + hr / 5) / 4
-      + gamma[2] * (rp / 12 + hr / 20) / 12
-      + gamma[3] * (rp / 4 + hr / 5) / 12
-      );
-   tmp[1][2] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 12
-      + gamma[1] * (rp / 12 + hr / 20) / 12
-      + gamma[2] * (rp / 12 + hr / 30) / 12
-      + gamma[3] * (rp / 12 + hr / 20) / 12
-      );
-   tmp[1][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 20) / 12
-      + gamma[1] * (rp / 4 + hr / 5) / 12
-      + gamma[2] * (rp / 12 + hr / 20) / 12
-      + gamma[3] * (rp / 4 + hr / 5) / 12
-      );
-   tmp[2][0] = tmp[0][2];
-   tmp[2][1] = tmp[1][2];
-   tmp[2][2] = hr * h_phi * (gamma[0] * (rp / 4 + hr / 20) / 12
-      + gamma[1] * (rp / 12 + hr / 30) / 12
-      + gamma[2] * (rp / 4 + hr / 20) / 4
-      + gamma[3] * (rp / 12 + hr / 30) / 4
-      );
-   tmp[2][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 30) / 12
-      + gamma[1] * (rp / 12 + hr / 20) / 12
-      + gamma[2] * (rp / 12 + hr / 30) / 4
-      + gamma[3] * (rp / 12 + hr / 20) / 4
-      );
-   tmp[3][0] = tmp[0][3];
-   tmp[3][1] = tmp[1][3];
-   tmp[3][2] = tmp[2][3];
-   tmp[3][3] = hr * h_phi * (gamma[0] * (rp / 12 + hr / 20) / 12
-      + gamma[1] * (rp / 4 + hr / 5) / 12
-      + gamma[2] * (rp / 12 + hr / 20) / 4
-      + gamma[3] * (rp / 4 + hr / 5) / 4
-      );
+   int i, j;
+
+   // [i] & [j] variables are linked to [solverFunc] function
+   auto solverFunc = [&](double r, double phi) {
+      double res = 1.0;
+      res *= func_R(i, rp, hr, r) * func_Phi(i, phi_s, h_phi, phi);
+      res *= func_R(j, rp, hr, r) * func_Phi(j, phi_s, h_phi, phi);
+      res *= r * gamma_value(rect.regionNum, r, phi);
+      return res;
+   };
+
+   auto solver = Gaussian_2p::TwoDimentionalSolver::withStep(rp, hr, phi_s, h_phi, solverFunc);
+
+   for (i = 0; i < 4; i++) {
+      for (j = 0; j < 4; j++) {
+         tmp[i][j] = solver.compute();
+      }
+   }
+
    for (int i = 0; i < 4; i++)
    {
       for (int k = 0; k < 4; k++)
@@ -292,18 +255,21 @@ void addLocalM(const Rectangle& rect) {
       }
    }
 
-   //cout << "Local_M" << endl;
-   //for (int i = 0; i < 4; i++)
-   //{
-   //   double tmp = 0;
-   //   for (int j = 0; j < 4; j++)
-   //   {
-   //      tmp += local_mat[i][j];
-   //   }
-   //   cout << " " << tmp;
-   //}
-   //cout << endl;
+#ifndef NDEBUG
 
+   cout << "Local_M" << endl;
+
+   for (int i = 0; i < 4; i++)
+   {
+      for (int j = 0; j < 4; j++)
+      {
+         cout << std::format(" {: .5f}", tmp[i][j]);
+      }
+      cout << endl;
+   }
+   cout << endl;
+
+#endif
 }
 
 void addLocalB(const Rectangle& rect) {
@@ -311,98 +277,52 @@ void addLocalB(const Rectangle& rect) {
    double hr = nodes[rect.b].r - nodes[rect.a].r;
    double phi_s = nodes[rect.a].phi;
    double h_phi = nodes[rect.c].phi - nodes[rect.a].phi;
-   double f[4] = {
-      f_value(rect.regionNum, nodes[rect.a]),
-      f_value(rect.regionNum, nodes[rect.b]),
-      f_value(rect.regionNum, nodes[rect.c]),
-      f_value(rect.regionNum, nodes[rect.d])
+
+   int i;
+
+   auto solverFunc = [&](double r, double phi) {
+      double res = 1.0;
+      res *= func_R(i, rp, hr, r) * func_Phi(i, phi_s, h_phi, phi);
+      res *= r * f_value(rect.regionNum, r, phi);
+      return res;
    };
-   double tmp[4][4];
 
-   // Матрица массы с gamma = const = 1
-   tmp[0][0] = hr * h_phi * ((rp / 4 + hr / 20) / 4
-      +  (rp / 12 + hr / 30) / 4
-      + (rp / 4 + hr / 20) / 12
-      +  (rp / 12 + hr / 30) / 12
-      );
-   tmp[0][1] = hr * h_phi * ((rp / 12 + hr / 30) / 4
-      + (rp / 12 + hr / 20) / 4
-      + (rp / 12 + hr / 30) / 12
-      + (rp / 12 + hr / 20) / 12
-      );
-   tmp[0][2] = hr * h_phi * ((rp / 4 + hr / 20) / 12
-      + (rp / 12 + hr / 30) / 12
-      + (rp / 4 + hr / 20) / 12
-      + (rp / 12 + hr / 30) / 12
-      );
-   tmp[0][3] = hr * h_phi * ((rp / 12 + hr / 30) / 12
-      + (rp / 12 + hr / 20) / 12
-      + (rp / 12 + hr / 30) / 12
-      + (rp / 12 + hr / 20) / 12
-      );
-   tmp[1][0] = tmp[0][1];
-   tmp[1][1] = hr * h_phi * ((rp / 12 + hr / 20) / 4
-      + (rp / 4 + hr / 5) / 4
-      + (rp / 12 + hr / 20) / 12
-      + (rp / 4 + hr / 5) / 12
-      );
-   tmp[1][2] = hr * h_phi * ((rp / 12 + hr / 30) / 12
-      + (rp / 12 + hr / 20) / 12
-      + (rp / 12 + hr / 30) / 12
-      + (rp / 12 + hr / 20) / 12
-      );
-   tmp[1][3] = hr * h_phi * ((rp / 12 + hr / 20) / 12
-      + (rp / 4 + hr / 5) / 12
-      + (rp / 12 + hr / 20) / 12
-      + (rp / 4 + hr / 5) / 12
-      );
-   tmp[2][0] = tmp[0][2];
-   tmp[2][1] = tmp[1][2];
-   tmp[2][2] = hr * h_phi * ((rp / 4 + hr / 20) / 12
-      + (rp / 12 + hr / 30) / 12
-      + (rp / 4 + hr / 20) / 4
-      + (rp / 12 + hr / 30) / 4
-      );
-   tmp[2][3] = hr * h_phi * ((rp / 12 + hr / 30) / 12
-      + (rp / 12 + hr / 20) / 12
-      + (rp / 12 + hr / 30) / 4
-      + (rp / 12 + hr / 20) / 4
-      );
-   tmp[3][0] = tmp[0][3];
-   tmp[3][1] = tmp[1][3];
-   tmp[3][2] = tmp[2][3];
-   tmp[3][3] = hr * h_phi * ((rp / 12 + hr / 20) / 12
-      + (rp / 4 + hr / 5) / 12
-      + (rp / 12 + hr / 20) / 4
-      + (rp / 4 + hr / 5) / 4
-      );
+   auto solver = Gaussian_2p::TwoDimentionalSolver::withStep(rp, hr, phi_s, h_phi, solverFunc);
 
-   for (int i = 0; i < 4; i++)
-   {
-      double t = 0;
-      for (int k = 0; k < 4; k++)
-      {
-         t += tmp[i][k] * f[k];
-      }
-      local_b[i] = t;
+   for (i = 0; i < 4; i++) {
+      local_b[i] = solver.compute();
    }
+
+#ifndef NDEBUG
+  // debug output
+   cout << "Local b:\n";
+   for (auto i = 0; i < 4; i++)
+   {
+      cout << std::format(" {: .5f}", local_b[i]);
+   }
+   cout << endl << endl;
+
+#endif
 }
 
 void addLocalToGlobal(const Rectangle& rect) {
-   int elems[4] = { rect.a, rect.b, rect.c, rect.d };
+   int elems[4] = {rect.a, rect.b, rect.c, rect.d};
    for (int i = 0; i < 4; i++)
    {
-      // добавляем все внедиагональные элементы на строке elems[i]
+// добавляем все внедиагональные элементы на строке elems[i]
       for (int k = 0; k < i; k++)
       {
-         // Если элемент в верхнем прямоугольнике, то скипаем
+// Если элемент в верхнем прямоугольнике, то скипаем
          if (elems[k] > elems[i])
          {
             continue;
          }
 
-         int id;
-         for (id = global_mat.ig[elems[i]]; id < global_mat.ig[elems[i] + 1ll] && global_mat.jg[id] != elems[k]; id++);
+         auto id = global_mat.ig[elems[i]];
+         for (id;
+            id < global_mat.ig[elems[i] + 1ll] && global_mat.jg[id] != elems[k];
+            id++)
+            ;
          global_mat.ggl[id] += local_mat[i][k];
          global_mat.ggu[id] += local_mat[i][k];
       }
@@ -413,23 +333,44 @@ void addLocalToGlobal(const Rectangle& rect) {
 }
 
 void addLocalsToGlobal(const Rectangle& rect) {
+#ifndef NDEBUG
+
+   cout << "Current rect:\n";
+   cout << rect.toString() << endl << endl;
+
+#endif
+
    addLocalG(rect);
    addLocalM(rect);
    addLocalB(rect);
    addLocalToGlobal(rect);
+
+   // debug output
+#ifndef NDEBUG
+
+   cout << "global matrix at this step: " << endl << endl;
+   cout << global_mat.toStringAsDense() << endl << endl;
+   cout << "Global vector at this step: " << endl;
+   cout << "[";
+   for (auto i = 0; i < global_b.size(); i++)
+   {
+      cout << std::format(" {: .5f}", global_b[i]);
+   }
+   cout << " ]\n\n\n";
+
+#endif
 }
 
 void include_s3() {
    for (const auto& edge : s3_edges)
    {
-      double M[2][2];
-      double b[2];
-      double beta = (s3_beta_value(edge.funcNum, nodes[edge.node1]) 
-         + s3_beta_value(edge.funcNum, nodes[edge.node2])) / 2;
-      double u[2] = { 
-         s3_u_value(edge.funcNum, nodes[edge.node1]), 
-         s3_u_value(edge.funcNum, nodes[edge.node2]) 
-      };
+      double M[2][2] = {};
+      double b[2] = {};
+      double beta = (s3_beta_value(edge.funcNum, nodes[edge.node1]) +
+         s3_beta_value(edge.funcNum, nodes[edge.node2])) /
+         2;
+      double u[2] = {s3_u_value(edge.funcNum, nodes[edge.node1]),
+                     s3_u_value(edge.funcNum, nodes[edge.node2])};
       double rp = nodes[edge.node1].r;
       double hr = nodes[edge.node2].r - nodes[edge.node1].r;
       double phi_s = nodes[edge.node1].phi;
@@ -440,9 +381,11 @@ void include_s3() {
          M[0][0] = beta * ((hr * hr) / 12 + (rp * hr) / 3);
          M[0][1] = beta * ((hr * rp) / 6 + (hr * hr) / 12);
          M[1][0] = M[0][1];
-         M[1][1] = beta * (rp*hr/3 + hr*hr/4);
-         b[0] = beta * (u[0] * (hr * rp / 3 + hr * hr / 12) + u[1] * (hr * rp / 6 + hr * hr / 12));
-         b[1] = beta * (u[0] * (hr * rp / 6 + hr * hr / 12) + u[1] * (hr * rp / 3 + hr * hr / 4));
+         M[1][1] = beta * (rp * hr / 3 + hr * hr / 4);
+         b[0] = beta * (u[0] * (hr * rp / 3 + hr * hr / 12) +
+            u[1] * (hr * rp / 6 + hr * hr / 12));
+         b[1] = beta * (u[0] * (hr * rp / 6 + hr * hr / 12) +
+            u[1] * (hr * rp / 3 + hr * hr / 4));
       }
       // Если краевое задано вдоль оси phi
       else
@@ -456,14 +399,17 @@ void include_s3() {
       }
 
       // добавляем полученный результат в глобальную матрицу
-      int elems[2] = { edge.node1, edge.node2 };
+      int elems[2] = {edge.node1, edge.node2};
       for (int i = 0; i < 2; i++)
       {
-         // добавляем все внедиагональные элементы на строке elems[i]
+// добавляем все внедиагональные элементы на строке elems[i]
          for (int k = 0; k < i; k++)
          {
-            int id;
-            for (id = global_mat.ig[elems[i]]; id < global_mat.ig[elems[i] + 1] && global_mat.jg[id] != elems[k]; id++);
+            auto id = global_mat.ig[elems[i]];
+            for (id; id < global_mat.ig[elems[i] + 1ll] &&
+               global_mat.jg[id] != elems[k];
+               id++)
+               ;
             global_mat.ggl[id] += M[i][k];
             global_mat.ggu[id] += M[i][k];
          }
@@ -477,11 +423,9 @@ void include_s3() {
 void include_s2() {
    for (const auto& edge : s2_edges)
    {
-      double b[2];
-      double theta[2] = {
-         s2_theta_value(edge.funcNum, nodes[edge.node1]),
-         s2_theta_value(edge.funcNum, nodes[edge.node2])
-      };
+      double b[2] = {};
+      double theta[2] = {s2_theta_value(edge.funcNum, nodes[edge.node1]),
+                         s2_theta_value(edge.funcNum, nodes[edge.node2])};
       double rp = nodes[edge.node1].r;
       double hr = nodes[edge.node2].r - nodes[edge.node1].r;
       double phi_s = nodes[edge.node1].phi;
@@ -489,8 +433,10 @@ void include_s2() {
       // Если краевое задано вдоль оси r
       if (hr > 1e-7)
       {
-         b[0] = (theta[0] * (hr * rp / 3 + hr * hr / 12) + theta[1] * (hr * rp / 6 + hr * hr / 12));
-         b[1] = (theta[0] * (hr * rp / 6 + hr * hr / 12) + theta[1] * (hr * rp / 3 + hr * hr / 4));
+         b[0] = (theta[0] * (hr * rp / 3 + hr * hr / 12) +
+            theta[1] * (hr * rp / 6 + hr * hr / 12));
+         b[1] = (theta[0] * (hr * rp / 6 + hr * hr / 12) +
+            theta[1] * (hr * rp / 3 + hr * hr / 4));
       }
       // Если краевое задано вдоль оси phi
       else
@@ -500,10 +446,10 @@ void include_s2() {
       }
 
       // добавляем полученный результат в глобальную матрицу
-      int elems[2] = { edge.node1, edge.node2 };
+      int elems[2] = {edge.node1, edge.node2};
       for (int i = 0; i < 2; i++)
       {
-         // добавляем вектор b
+// добавляем вектор b
          global_b[elems[i]] += b[i];
       }
    }
@@ -519,14 +465,15 @@ void include_s1() {
       // ставим в соответствующую ячейку вектора b значение u
       global_b[node.node] = u;
       // зануляем строку в нижнем треугольнике
-      for (int j = global_mat.ig[node.node]; j < global_mat.ig[node.node + 1]; j++)
+      for (auto j = global_mat.ig[node.node]; j < global_mat.ig[node.node + 1ll];
+         j++)
       {
          global_mat.ggl[j] = 0;
       }
       // зануляем строку в верхнем треугольнике
       for (int i = node.node + 1; i < global_mat.Size(); i++)
       {
-         for (int j = global_mat.ig[i]; j < global_mat.ig[i + 1]; j++)
+         for (auto j = global_mat.ig[i]; j < global_mat.ig[i + 1ll]; j++)
          {
             if (global_mat.jg[j] == node.node)
             {
@@ -557,20 +504,35 @@ int main() {
    include_s2();
    include_s1();
 
+   // debug output
+#ifndef NDEBUG
+
+   cout << "After include edges:\n\n Matrix:\n\n";
+   cout << global_mat.toStringAsDense() << endl << endl;
+   cout << "Vector b:\n\n";
+   cout << "[";
+   for (auto i = 0; i < global_b.size(); i++)
+   {
+      cout << std::format(" {: .5f}", global_b[i]);
+   }
+   cout << " ]\n\n\n";
+
+#endif
+
    vector<double> q;
    q.resize(global_mat.Size());
    IterSolvers::MSG_Assimetric::Init_Default(q.size());
-   //IterSolvers::LOS::Init_LuPrecond(q.size(), global_mat);
+   // IterSolvers::LOS::Init_LuPrecond(q.size(), global_mat);
    IterSolvers::minEps = 1e-20;
    double eps;
    IterSolvers::MSG_Assimetric::Default(global_mat, global_b, q, eps);
-   //IterSolvers::LOS::LuPrecond(global_mat, global_b, q, eps);
+   // IterSolvers::LOS::LuPrecond(global_mat, global_b, q, eps);
    IterSolvers::Destruct();
 
    cout << "Полученное решение: " << endl;
    for (auto elem : q)
    {
-      cout << format("{0:<.14f}", elem) << endl;
+      cout << format("{: .14f}", elem) << endl;
    }
 
    return 0;

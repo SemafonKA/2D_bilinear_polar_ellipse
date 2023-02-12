@@ -70,6 +70,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -130,15 +138,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="gaussian_quadrature_2point.h" />
     <ClInclude Include="ThreeSteppers\Headers\IterSolvers.h" />
     <ClInclude Include="ThreeSteppers\Headers\LU.h" />
     <ClInclude Include="ThreeSteppers\Headers\SparseMatrix.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="ThreeSteppers\Resourses\IterSolvers.cpp" />
     <ClCompile Include="ThreeSteppers\Resourses\LU.cpp" />
     <ClCompile Include="ThreeSteppers\Resourses\SparseMatrix.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="iofiles\nodes.txt" />
+    <Text Include="iofiles\rectangles.txt" />
+    <Text Include="iofiles\s1_nodes.txt" />
+    <Text Include="iofiles\s2_edges.txt" />
+    <Text Include="iofiles\s3_edges.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
