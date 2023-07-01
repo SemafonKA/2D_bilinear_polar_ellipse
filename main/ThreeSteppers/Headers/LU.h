@@ -5,7 +5,6 @@
 // Неполное разложение LU(sq) матрицы разреженного строчно-столбцового формата SparseMatrix
 // Не хранит портрет матрицы, но использует портрет исходной матрицы (а также ссылается на неё)
 class LU {
-
 // Блок внутренних переменных разложения LU
 public:
    const SparseMatrix* parent = nullptr;
@@ -18,7 +17,6 @@ public:
 
    // Вектор элементов верхнего треугольника U
    std::vector<double> ggu;
-
 
 // Блок основных конструкторов класса
 public:
@@ -36,7 +34,6 @@ public:
    /// <param name="mat"> - матрица, по которой построится LU-разложение, с привязкой этой матрицы к объекту</param>
    LU(const SparseMatrix& mat);
 
-
 // Блок основных нестатических методов класса
 public:
 
@@ -52,7 +49,6 @@ public:
    /// <param name="diSize"> - размер диагонали,</param>
    /// <param name="luSize"> - размер массивов нижнего и верхнего треугольника</param>
    void Resize(size_t diSize, size_t luSize);
-
 
 // Умножение матриц на вектор
 
@@ -71,7 +67,6 @@ public:
    /// <returns>Ссылка на вектор ans</returns>
    std::vector<double>& LMultToVec(const std::vector<double>& vec, std::vector<double>& ans) const;
 
-
    /// <summary>
    /// Умножение нижней матрицы L^T на вектор vec. Выделяет память под вектор ответа, не меняет матрицу LU
    /// </summary>
@@ -86,7 +81,6 @@ public:
    /// <param name="ans"> - вектор, куда запишется ответ без выделения памяти (должен отличаться от vec!)</param>
    /// <returns>Ссылка на вектор ans</returns>
    std::vector<double>& LTranspMultToVec(const std::vector<double>& vec, std::vector<double>& ans) const;
-
 
    /// <summary>
    /// Умножение верхней матрицы U на вектор vec. Выделяет память под вектор ответа, не меняет матрицу LU
@@ -103,7 +97,6 @@ public:
    /// <returns>Ссылка на вектор ans</returns>
    std::vector<double>& UMultToVec(const std::vector<double>& vec, std::vector<double>& ans) const;
 
-
    /// <summary>
    /// Умножение верхней матрицы U^T на вектор vec. Выделяет память под вектор ответа, не меняет матрицу LU
    /// </summary>
@@ -118,7 +111,6 @@ public:
    /// <param name="ans"> - вектор, куда запишется ответ без выделения памяти (должен отличаться от vec!)</param>
    /// <returns>Ссылка на вектор ans</returns>
    std::vector<double>& UTranspMultToVec(const std::vector<double>& vec, std::vector<double>& ans) const;
-
 
 // Решение слау с использованием матриц и вектора правой части
 
@@ -137,7 +129,6 @@ public:
    /// <returns>Полученный вектор x</returns>
    std::vector<double> LSlauSolve(const std::vector<double>& right) const;
 
-
    /// <summary>
    /// Решение слау вида L^T * x = right. Не выделяет память под вектор x, не меняет матрицы LU
    /// </summary>
@@ -153,7 +144,6 @@ public:
    /// <returns>Полученный вектор x</returns>
    std::vector<double> LTranspSlauSolve(const std::vector<double>& right) const;
 
-
    /// <summary>
    /// Решение слау вида Ux = right. Не выделяет память под вектор x, не меняет матрицы LU
    /// </summary>
@@ -168,7 +158,6 @@ public:
    /// <param name="right"> - вектор правой части уравнения;</param>
    /// <returns>Полученный вектор x</returns>
    std::vector<double> USlauSolve(const std::vector<double>& right) const;
-
 
    /// <summary>
    /// Решение слау вида U^T * x = right. Не выделяет память под вектор x, не меняет матрицы LU

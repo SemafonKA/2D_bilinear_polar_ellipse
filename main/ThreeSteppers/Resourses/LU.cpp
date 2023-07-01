@@ -1,7 +1,5 @@
 ﻿#include "../Headers/LU.h"
 
-
-
 /// <summary>
 /// Конструктор с резервированием памяти под разложение
 /// </summary>
@@ -11,7 +9,6 @@ LU::LU(size_t diSize, size_t luSize) {
    Resize(diSize, luSize);
 }
 
-
 /// <summary>
 /// Конструктор с построением неполного LU(sq)-разложения по матрице mat
 /// </summary>
@@ -20,8 +17,6 @@ LU::LU(const SparseMatrix& mat)
 {
    MakeLuFor(mat);
 }
-
-
 
 /// <summary>
 /// Разложить матрицу mat в неполное LU(sq) - разложение
@@ -47,7 +42,7 @@ void LU::MakeLuFor(const SparseMatrix& mat) {
          size_t k = ig[i];
          size_t v = ig[jg[j]];
          double ggl_accum = 0, ggu_accum = 0;
-         while (k < j && v < ig[jg[j] + 1])
+         while (k < j && v < ig[jg[j] + 1ll])
          {
             if (jg[k] > jg[v]) v++;
             else if (jg[k] < jg[v]) k++;
@@ -74,8 +69,6 @@ void LU::Resize(size_t diSize, size_t luSize) {
    ggl.resize(luSize);
    ggu.resize(luSize);
 }
-
-
 
 /// <summary>
 /// Умножение нижней матрицы L на вектор vec. Выделяет память под вектор ответа, не меняет матрицу LU
@@ -105,7 +98,7 @@ std::vector<double>& LU::LMultToVec(const std::vector<double>& vec, std::vector<
       ans[i] = di[i] * vec[i];
 
       // Умножаем нижний треугольник
-      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1]; j++)
+      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1ll]; j++)
       {
          ans[i] += ggl[j] * vec[parent->jg[j]];
       }
@@ -131,7 +124,7 @@ std::vector<double>& LU::LTranspMultToVec(const std::vector<double>& vec, std::v
       ans[i] = di[i] * vec[i];
 
       // Умножаем на верхний треугольник с данными нижнего
-      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1]; j++)
+      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1ll]; j++)
       {
          ans[parent->jg[j]] += ggl[j] * vec[i];
       }
@@ -168,7 +161,7 @@ std::vector<double>& LU::UMultToVec(const std::vector<double>& vec, std::vector<
       ans[i] = di[i] * vec[i];
 
       // Умножаем верхний треугольник
-      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1]; j++)
+      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1ll]; j++)
       {
          ans[parent->jg[j]] += ggu[j] * vec[i];
       }
@@ -194,7 +187,7 @@ std::vector<double>& LU::UTranspMultToVec(const std::vector<double>& vec, std::v
       ans[i] = di[i] * vec[i];
 
       // Умножаем нижний треугольник с данными верхнего треугольника
-      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1]; j++)
+      for (uint32_t j = parent->ig[i]; j < parent->ig[i + 1ll]; j++)
       {
          ans[i] += ggu[j] * vec[parent->jg[j]];
       }
@@ -202,8 +195,6 @@ std::vector<double>& LU::UTranspMultToVec(const std::vector<double>& vec, std::v
 
    return ans;
 }
-
-
 
 /// <summary>
 /// Решение слау вида Lx = right. Не выделяет память под вектор x, не меняет матрицы LU
@@ -268,7 +259,6 @@ std::vector<double> LU::LTranspSlauSolve(const std::vector<double>& right) const
    return LTranspSlauSolve(right, x);
 }
 
-
 /// <summary>
 /// Решение слау вида Ux = right. Не выделяет память под вектор x, не меняет матрицы LU
 /// </summary>
@@ -281,7 +271,7 @@ std::vector<double>& LU::USlauSolve(const std::vector<double>& right, std::vecto
    if (right.size() != x.size()) throw std::runtime_error("Размеры матрицы и результирующего вектора не совпадают.");
 
    size_t size = x.size();
-   for (size_t i = 0; i < size; i++) 
+   for (size_t i = 0; i < size; i++)
       x[i] = 0;
 
    for (size_t it = 0, i = size - 1; it < size; it++, i--)

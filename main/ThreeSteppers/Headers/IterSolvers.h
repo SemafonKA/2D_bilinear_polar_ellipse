@@ -7,7 +7,6 @@
 #include "SparseMatrix.h"
 #include "LU.h"
 
-
 namespace Vec {
    inline double Scalar(const std::vector<double>& l, const std::vector<double>& r);
 
@@ -32,11 +31,9 @@ namespace IterSolvers {
 
       size_t Default(const SparseMatrix& A, const std::vector<double>& f, std::vector<double>& x, double& eps, bool debugOutput = globalDebugOutput);
 
-
       void Init_DiagPrecond(size_t size);
 
       size_t DiagPrecond(const SparseMatrix& A, const std::vector<double>& f, std::vector<double>& x, double& eps, bool debugOutput = globalDebugOutput);
-
 
       void Init_LuPrecond(size_t diSize, const SparseMatrix& A);
 
@@ -46,21 +43,18 @@ namespace IterSolvers {
    namespace LOS {
       extern size_t resetIter;
 
-
       void Init_Default(size_t size);
 
       size_t Default(const SparseMatrix& A, const std::vector<double>& f, std::vector<double>& x, double& eps, bool debugOutput = globalDebugOutput);
 
-
       void Init_DiagPrecond(size_t size);
 
       size_t DiagPrecond(const SparseMatrix& A, const std::vector<double>& f, std::vector<double>& x, double& eps, bool debugOutput = globalDebugOutput);
-
 
       void Init_LuPrecond(size_t diSize, const SparseMatrix& A);
 
       size_t LuPrecond(const SparseMatrix& A, const std::vector<double>& f, std::vector<double>& x, double& eps, bool debugOutput = globalDebugOutput);
    }
 
-   void Destruct();
+   void Destruct() noexcept;
 };
