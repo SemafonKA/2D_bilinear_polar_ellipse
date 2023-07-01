@@ -643,7 +643,7 @@ namespace IterSolvers {
       }
    }
 
-   void Destruct() {
+   void Destruct() noexcept {
       delete _tmp1, _tmp2, _tmp3, _tmp4, _tmp5, _tmp6;
       _tmp1 = _tmp2 = _tmp3 = _tmp4 = _tmp5 = _tmp6 = nullptr;
       delete _lu_mat;

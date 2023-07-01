@@ -6,6 +6,7 @@
 #pragma once
 #include <string>
 #include <stdexcept>
+#include <array>
 
 namespace GlobalPaths {
    // Пути файлов:
@@ -18,8 +19,12 @@ namespace GlobalPaths {
 }
 
 #pragma region TYPEDEFINES
-using Matrix = std::vector<std::vector<double>>;
+using Matrix = std::array<std::array<double, 4>, 4>;
 
+/// <summary>
+/// Структура прямоугольника, имеет 4 номера вершины: [a], [b], [c], [d], а также
+/// номер области, в которой находится сам прямоугольник, [region]
+/// </summary>
 struct Rectangle {
    int a = 0;
    int b = 0;
@@ -40,6 +45,9 @@ struct Rectangle {
    }
 };
 
+/// <summary>
+/// Структура описания узла сетки. Содержит координаты этого узла [r] и [phi]
+/// </summary>
 struct Node {
    double r = 0.0;
    double phi = 0.0;
@@ -58,51 +66,63 @@ struct S23_edge {
 #pragma endregion TYPEDEFINES
 
 double f_value(int regionNum, double r, double phi) {
-   double ans = 0.0;
    switch (regionNum)
    {
-   case 0: ans = r*phi - (2.0 / r); break;
-   //case 1: ans = r; break;
+   case 0: {
+      return phi*phi + r*r - 8*r*r - 2.0;
+   }
+
    default:
       throw std::runtime_error("Значения функции f для региона с номером " + std::to_string(regionNum) + " не найдено.");
-      break;
    }
-   return ans;
 }
 double f_value(int regionNum, Node node) {
    return f_value(regionNum, node.r, node.phi);
 }
 
 double lambda_value(int regionNum, double r, double phi) {
-   double ans = 0.0;
    switch (regionNum)
    {
-   case 0: ans = r*phi; break;
-   //case 1: ans = 0.0; break;
+   case 0: {
+      return r*r;
+   }
+
    default:
       throw std::runtime_error("Значения функции lambda для региона с номером " + std::to_string(regionNum) + " не найдено.");
-      break;
    }
-   return ans;
+
 }
 double lambda_value(int regionNum, Node node) {
    return lambda_value(regionNum, node.r, node.phi);
 }
 
 double gamma_value(int regionNum, double r, double phi) {
-   double ans = 0.0;
    switch (regionNum)
    {
-   case 0: ans = r; break;
-   //case 1: ans = r; break;
+   case 0: {
+      return 1;
+   }
+
    default:
       throw std::runtime_error("Значения функции gamma для региона с номером " + std::to_string(regionNum) + " не найдено.");
-      break;
    }
-   return ans;
 }
 double gamma_value(int regionNum, Node node) {
    return gamma_value(regionNum, node.r, node.phi);
+}
+
+double s1_u_value(int s1_funcNum, double r, double phi) {
+   switch (s1_funcNum) {
+   case 0: {
+      return phi*phi + r*r;
+   }
+
+   default:
+      throw std::runtime_error("Значения функции u для s1-краевого с номером " + std::to_string(s1_funcNum) + " не найдено.");
+   }
+}
+double s1_u_value(int s1_funcNum, Node node) {
+   return s1_u_value(s1_funcNum, node.r, node.phi);
 }
 
 double s3_beta_value(int s3_funcNum, Node node) {
@@ -139,20 +159,6 @@ double s2_theta_value(int s2_funcNum, Node node) {
       //case 1: ans = 0.0; break;
    default:
       throw std::runtime_error("Значения функции theta для s2-краевого с номером " + std::to_string(s2_funcNum) + " не найдено.");
-      break;
-   }
-   return ans;
-}
-
-double s1_u_value(int s1_funcNum, Node node) {
-   double ans = 0.0;
-   switch (s1_funcNum)
-   {
-   case 0: ans = 1.0; break;
-   case 1: ans = 4.0; break;
-   //case 2: ans = 7.0; break;
-   default:
-      throw std::runtime_error("Значения функции u для s1-краевого с номером " + std::to_string(s1_funcNum) + " не найдено.");
       break;
    }
    return ans;

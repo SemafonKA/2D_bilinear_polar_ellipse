@@ -56,5 +56,5 @@ namespace IterSolvers {
       size_t LuPrecond(const SparseMatrix& A, const std::vector<double>& f, std::vector<double>& x, double& eps, bool debugOutput = globalDebugOutput);
    }
 
-   void Destruct();
+   void Destruct() noexcept;
 };

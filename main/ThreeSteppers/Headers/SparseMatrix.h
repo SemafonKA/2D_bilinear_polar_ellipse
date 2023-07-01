@@ -114,7 +114,7 @@ public:
       return 0.0;
    }
 
-   std::string toStringAsDense() noexcept {
+   std::string toStringAsDense() {
       std::string out = "[ ";
       auto size = Size();
 
@@ -124,11 +124,11 @@ public:
          out += "[ ";
          for (auto j = 0; j < size; j++)
          {
-            out += std::format("{: .5f}", val(i, j)); //std::to_string(val(i, j));
-            if (j + 1 < size) out += ", ";
+            out += std::format("{: 15.5f}", val(i, j)); //std::to_string(val(i, j));
+            if (j + 1ll < size) out += ", ";
          }
          out += " ]";
-         if (i + 1 < size) out += "\n";
+         if (i + 1ll < size) out += "\n";
       }
       out += " ]";
 

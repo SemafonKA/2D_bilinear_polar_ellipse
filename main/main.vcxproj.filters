@@ -27,7 +27,7 @@
     <ClInclude Include="Constants.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="gaussian_quadrature_2point.h">
+    <ClInclude Include="gaussian_quadrature.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
